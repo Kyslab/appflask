@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+<head>
+    <title>Upload Multiple Excel Files</title>
+</head>
+<body>
+    <h1>Upload Multiple Excel Files</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="files" multiple>
+        <input type="submit" value="Upload">
+    </form>
+    <br>
+    <a href="/uploaded_files">Go to uploaded files</a>
+</body>
+</html>

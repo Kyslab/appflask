@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+    <title>Upload and List Excel Files</title>
+    <script>
+        function addTextBox() {
+            var container = document.getElementById("textboxes");
+            var div = document.createElement("div");
+            div.innerHTML = '<label><input type="checkbox" name="remove_text" value="true" checked> Remove rows containing text: <input type="text" name="text_to_remove"><button type="button" onclick="addTextBox()">+</button></label>';
+            container.appendChild(div);
+        }
+    </script>
+</head>
+<body>
+    <h1>Upload and List Excel Files</h1>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="files" multiple>
+        <input type="submit" value="Upload">
+    </form>
+    <br>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <h2>Uploaded Files:</h2>
+    <ul>
+        {% for file in files %}
+            <li>
+                {{ file }}
+                <form action="/delete/{{ file }}" method="post" style="display:inline;">
+                    <input type="submit" value="Delete">
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+    {% if files %}
+    <form action="/" method="post">
+        <input type="hidden" name="merge" value="true">
+        <label>
+            <input type="checkbox" name="remove_empty" value="true">
+            Remove empty rows
+        </label>
+        <br>
+        <div id="textboxes">
+            <label>
+                <input type="checkbox" name="remove_text" value="true">
+                Remove rows containing text:
+                <input type="text" name="text_to_remove">
+                <button type="button" onclick="addTextBox()">+</button>
+            </label>
+        </div>
+        <br>
+        <input type="submit" value="Merge Files">
+    </form>
+    {% endif %}
+</body>
+</html>
