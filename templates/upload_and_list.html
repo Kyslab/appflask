@@ -1,62 +1,48 @@
 <!doctype html>
 <html>
 <head>
-    <title>Upload and List Excel Files</title>
-    <script>
-        function addTextBox() {
-            var container = document.getElementById("textboxes");
-            var div = document.createElement("div");
-            div.innerHTML = '<label><input type="checkbox" name="remove_text" value="true" checked> Remove rows containing text: <input type="text" name="text_to_remove"><button type="button" onclick="addTextBox()">+</button></label>';
-            container.appendChild(div);
-        }
-    </script>
+    <title>Upload and List Files</title>
 </head>
 <body>
-    <h1>Upload and List Excel Files</h1>
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="files" multiple>
-        <input type="submit" value="Upload">
+    <h1>Upload and List Files</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <p>
+            <input type="file" name="files" multiple>
+        </p>
+        <p><input type="submit" value="Upload Files"></p>
     </form>
-    <br>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul>
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-    <h2>Uploaded Files:</h2>
+    <h2>Files:</h2>
     <ul>
         {% for file in files %}
-            <li>
-                {{ file }}
-                <form action="/delete/{{ file }}" method="post" style="display:inline;">
-                    <input type="submit" value="Delete">
+            <li>{{ file }}
+                <form method="POST" action="{{ url_for('delete_file', filename=file) }}" style="display: inline;">
+                    <button type="submit">Delete</button>
                 </form>
             </li>
         {% endfor %}
     </ul>
-    {% if files %}
-    <form action="/" method="post">
-        <input type="hidden" name="merge" value="true">
-        <label>
-            <input type="checkbox" name="remove_empty" value="true">
-            Remove empty rows
-        </label>
-        <br>
-        <div id="textboxes">
-            <label>
-                <input type="checkbox" name="remove_text" value="true">
-                Remove rows containing text:
+    <form method="POST">
+        <input type="hidden" name="merge">
+        <p>
+            <input type="checkbox" name="remove_empty"> Remove Empty Rows
+        </p>
+        <div id="text_to_remove_container">
+            <p>
+                <input type="checkbox" name="text_to_remove" checked>
                 <input type="text" name="text_to_remove">
-                <button type="button" onclick="addTextBox()">+</button>
-            </label>
+                <button type="button" id="add_text_to_remove">+</button>
+            </p>
         </div>
-        <br>
-        <input type="submit" value="Merge Files">
+        <p><input type="submit" value="Merge Files"></p>
     </form>
-    {% endif %}
+    <a href="{{ url_for('logout') }}">Logout</a>
+    <script>
+        document.getElementById('add_text_to_remove').addEventListener('click', function () {
+            var container = document.getElementById('text_to_remove_container');
+            var new_input = document.createElement('p');
+            new_input.innerHTML = '<input type="checkbox" name="text_to_remove" checked> <input type="text" name="text_to_remove">';
+            container.appendChild(new_input);
+        });
+    </script>
 </body>
 </html>

@@ -1,7 +1,12 @@
 import os
-from flask import Flask, request, redirect, url_for, send_file, render_template, flash
+from flask import Flask, request, redirect, url_for, send_file, render_template, flash, session
 from werkzeug.utils import secure_filename
 import openpyxl
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField
+from wtforms.validators import InputRequired, Length, ValidationError
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -9,16 +14,78 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['PROCESSED_FOLDER'] = 'processed'
 app.config['ALLOWED_EXTENSIONS'] = {'xlsx'}
 
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'postgresql://localhost/yourdbname'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 if not os.path.exists(app.config['PROCESSED_FOLDER']):
     os.makedirs(app.config['PROCESSED_FOLDER'])
 
+# Define the User model
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+
+class RegisterForm(FlaskForm):
+    username = StringField('Username', validators=[InputRequired(), Length(min=4, max=150)])
+    password = PasswordField('Password', validators=[InputRequired(), Length(min=4, max=150)])
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('Username is already taken.')
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[InputRequired(), Length(min=4, max=150)])
+    password = PasswordField('Password', validators=[InputRequired(), Length(min=4, max=150)])
+    remember = BooleanField('Remember me')
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        hashed_password = form.password.data
+        new_user = User(username=form.username.data, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Account created successfully', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and user.password == form.password.data:
+            session['user_id'] = user.id
+            flash('Logged in successfully', 'success')
+            return redirect(url_for('upload_and_list_files'))
+        else:
+            flash('Login Unsuccessful. Please check username and password', 'danger')
+    return render_template('login.html', form=form)
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('login'))
+
 @app.route('/', methods=['GET', 'POST'])
 def upload_and_list_files():
+    if 'user_id' not in session:
+        flash('Please log in to access this page', 'warning')
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
         if 'files' in request.files:
             files = request.files.getlist('files')
@@ -60,6 +127,10 @@ def upload_and_list_files():
 
 @app.route('/delete/<filename>', methods=['POST'])
 def delete_file(filename):
+    if 'user_id' not in session:
+        flash('Please log in to access this page', 'warning')
+        return redirect(url_for('login'))
+
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.exists(file_path):
         os.remove(file_path)
@@ -70,6 +141,10 @@ def delete_file(filename):
 
 @app.route('/download/<filename>')
 def download_file(filename):
+    if 'user_id' not in session:
+        flash('Please log in to access this page', 'warning')
+        return redirect(url_for('login'))
+
     file_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)
