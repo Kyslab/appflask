@@ -16,7 +16,8 @@ app.config['ALLOWED_EXTENSIONS'] = {'xlsx'}
 
 # Database configuration
 # app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'postgresql+psycopg2://localhost/yourdbname'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://u7tbi7nfum7v0:pf5f201f6f9d9fbcc433d951c97a2556850b548a66deed2297b7a41bfe789d0b6@c5p86clmevrg5s.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d7ctfli13pgsc0'
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
