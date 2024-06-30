@@ -1,4 +1,7 @@
 import os
+from wtforms.validators import InputRequired, Length, ValidationError, Email
+# import email_validator
+
 from flask import Flask, request, redirect, url_for, send_file, render_template, flash, session
 from werkzeug.utils import secure_filename
 import openpyxl
@@ -6,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms.validators import InputRequired, Length, ValidationError, Email
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -15,9 +18,7 @@ app.config['PROCESSED_FOLDER'] = 'processed'
 app.config['ALLOWED_EXTENSIONS'] = {'xlsx'}
 
 # Database configuration
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'postgresql+psycopg2://localhost/yourdbname'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://u7tbi7nfum7v0:pf5f201f6f9d9fbcc433d951c97a2556850b548a66deed2297b7a41bfe789d0b6@c5p86clmevrg5s.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d7ctfli13pgsc0'
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -31,20 +32,20 @@ if not os.path.exists(app.config['PROCESSED_FOLDER']):
 # Define the User model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
 
 class RegisterForm(FlaskForm):
-    username = StringField('Username', validators=[InputRequired(), Length(min=4, max=150)])
+    email = StringField('Email', validators=[InputRequired(), Email(), Length(max=150)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=4, max=150)])
 
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
         if user:
-            raise ValidationError('Username is already taken.')
+            raise ValidationError('Email is already taken.')
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[InputRequired(), Length(min=4, max=150)])
+    email = StringField('Email', validators=[InputRequired(), Email(), Length(max=150)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=4, max=150)])
     remember = BooleanField('Remember me')
 
@@ -56,7 +57,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = form.password.data
-        new_user = User(username=form.username.data, password=hashed_password)
+        new_user = User(email=form.email.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         flash('Account created successfully', 'success')
@@ -67,13 +68,13 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(email=form.email.data).first()
         if user and user.password == form.password.data:
             session['user_id'] = user.id
             flash('Logged in successfully', 'success')
             return redirect(url_for('upload_and_list_files'))
         else:
-            flash('Login Unsuccessful. Please check username and password', 'danger')
+            flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', form=form)
 
 @app.route('/logout')

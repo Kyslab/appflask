@@ -1,0 +1,20 @@
+bat cmd tai thu muc nay
+
+# Tạo môi trường ảo mới
+python -m venv myenv
+source myenv/bin/activate  # Trên Windows, sử dụng `myenv\Scripts\activate`
+
+# Cài đặt các thư viện cần thiết
+pip install Flask openpyxl
+
+# Tạo tệp requirements.txt
+pip freeze > requirements.txt
+
+
+=VALUE(MID(A1, MIN(FIND({0,1,2,3,4,5,6,7,8,9}, A1 & "0123456789")), LEN(A1) - MIN(FIND({0,1,2,3,4,5,6,7,8,9}, A1 & "0123456789")) + 1))
+
+
+
+git add .
+git commit -m "Update requirements and database configuration"
+git push heroku master
