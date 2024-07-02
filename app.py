@@ -2,7 +2,6 @@
 # app.config['MAIL_USERNAME'] = 'mergexceltool'
 # app.config['MAIL_PASSWORD'] = 'uhuu dnwi kaiu days'
 # app.config['MAIL_DEFAULT_SENDER'] = 'mergexceltool@gmail.com'
-
 import os
 import random
 import string

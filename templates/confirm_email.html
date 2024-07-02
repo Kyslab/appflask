@@ -1,24 +1,27 @@
-<!doctype html>
-<html>
-<head>
-    <title>Confirm Email</title>
-</head>
-<body>
-    <h1>Confirm Email</h1>
-    <form method="POST">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.email.label }}<br>
-            {{ form.email(size=32, readonly=True) }}<br>
-        </p>
-        <p>
-            {{ form.code.label }}<br>
-            {{ form.code(size=32) }}<br>
-            {% if error %}
-                <span style="color: red;">{{ error }}</span>
-            {% endif %}
-        </p>
-        <p><input type="submit" value="Confirm"></p>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}
+Confirm Email
+{% endblock %}
+
+{% block content %}
+<h1>Confirm Email</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.email.label }}<br>
+        {{ form.email(size=32, readonly=True, value=form.email.data) }}<br>
+    </p>
+    <p>
+        {{ form.code.label }}<br>
+        {{ form.code(size=32) }}<br>
+        {% for error in form.code.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    </p>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <p><input type="submit" value="Confirm"></p>
+</form>
+{% endblock %}
