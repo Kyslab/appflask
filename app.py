@@ -1,7 +1,11 @@
-import os
-from wtforms.validators import InputRequired, Length, ValidationError, Email
-# import email_validator
+# sửa sau khi copy
+# app.config['MAIL_USERNAME'] = 'mergexceltool'
+# app.config['MAIL_PASSWORD'] = 'uhuu dnwi kaiu days'
+# app.config['MAIL_DEFAULT_SENDER'] = 'mergexceltool@gmail.com'
 
+import os
+import random
+import string
 from flask import Flask, request, redirect, url_for, send_file, render_template, flash, session
 from werkzeug.utils import secure_filename
 import openpyxl
@@ -9,7 +13,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField
-from wtforms.validators import InputRequired, Length, ValidationError, Email
+from wtforms.validators import InputRequired, Length, Email, ValidationError
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -24,6 +29,17 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+# Mail configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'mergexceltool'
+app.config['MAIL_PASSWORD'] = 'uhuu dnwi kaiu days'
+app.config['MAIL_DEFAULT_SENDER'] = 'mergexceltool@gmail.com'
+
+mail = Mail(app)
+
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 if not os.path.exists(app.config['PROCESSED_FOLDER']):
@@ -34,6 +50,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
+    is_confirmed = db.Column(db.Boolean, default=False)
 
 class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), Email(), Length(max=150)])
@@ -49,6 +66,10 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[InputRequired(), Length(min=4, max=150)])
     remember = BooleanField('Remember me')
 
+class ConfirmEmailForm(FlaskForm):
+    email = StringField('Email', validators=[InputRequired(), Email(), Length(max=150)])
+    code = StringField('Confirmation Code', validators=[InputRequired(), Length(min=6, max=6)])
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
@@ -57,12 +78,34 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = form.password.data
-        new_user = User(email=form.email.data, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Account created successfully', 'success')
-        return redirect(url_for('login'))
+        confirmation_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        session['confirmation_code'] = confirmation_code
+        session['email'] = form.email.data
+        session['password'] = hashed_password
+
+        msg = Message('Email Confirmation', recipients=[form.email.data])
+        msg.body = f'Your confirmation code is {confirmation_code}'
+        mail.send(msg)
+
+        return redirect(url_for('confirm_email'))
+
     return render_template('register.html', form=form)
+
+@app.route('/confirm_email', methods=['GET', 'POST'])
+def confirm_email():
+    form = ConfirmEmailForm(email=session.get('email'))
+    error = None
+    if form.validate_on_submit():
+        if form.code.data == session.get('confirmation_code'):
+            new_user = User(email=form.email.data, password=session.get('password'), is_confirmed=True)
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Account confirmed successfully. Please log in.', 'success')
+            return redirect(url_for('login'))
+        else:
+            error = 'Invalid confirmation code. Please try again.'
+
+    return render_template('confirm_email.html', form=form, error=error)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

@@ -4,7 +4,7 @@ bat cmd tai thu muc nay
 python -m venv myenv
 source myenv/bin/activate  # Trên Windows, sử dụng `myenv\Scripts\activate`
 
-# Cài đặt các thư viện cần thiết
+# Cài đặt các thư viện cần thiết (nếu lỗi sẽ phải cài cả trong và ngoài myenv)
 pip install Flask openpyxl
 
 # Tạo tệp requirements.txt

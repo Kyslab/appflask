@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+    <title>Confirm Email</title>
+</head>
+<body>
+    <h1>Confirm Email</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.email.label }}<br>
+            {{ form.email(size=32, readonly=True) }}<br>
+        </p>
+        <p>
+            {{ form.code.label }}<br>
+            {{ form.code(size=32) }}<br>
+            {% if error %}
+                <span style="color: red;">{{ error }}</span>
+            {% endif %}
+        </p>
+        <p><input type="submit" value="Confirm"></p>
+    </form>
+</body>
+</html>
