@@ -28,5 +28,7 @@ Login
     </p>
     <p><input type="submit" value="Login"></p>
 </form>
-<a href="{{ url_for('register') }}">Register</a>
+<a href="{{ url_for('register') }}">Register</a><br>
+<a href="{{ url_for('reset_request') }}">Forgot Password?</a><br>
+<a href="{{ url_for('login_google') }}" class="btn btn-danger">Login with Google</a>
 {% endblock %}
