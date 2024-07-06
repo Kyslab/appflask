@@ -233,7 +233,7 @@ def logout():
     session.pop('user_id', None)
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
-@app.route('/google06a54390fa47b952')
+@app.route('/google06a54390fa47b952.html')
 def google06a54390fa47b952():
     return render_template('google06a54390fa47b952.html')
     # return redirect(url_for('google06a54390fa47b952'))
