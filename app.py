@@ -3,6 +3,9 @@
 # app.config['MAIL_PASSWORD'] = 'uhuu dnwi kaiu days'
 # app.config['MAIL_DEFAULT_SENDER'] = 'mergexceltool@gmail.com'
 
+# khi dua lên heroku:
+# redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
+
     # client_id='206611615101-g9kp571dagj69qn1b0ffb723c8qn9d7q.apps.googleusercontent.com',
     # client_secret='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',
 import secrets
@@ -210,6 +213,7 @@ def login_google():
     nonce = secrets.token_urlsafe()
     session['nonce'] = nonce
     redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
+    # redirect_uri = url_for('authorize_google', _external=True, _scheme='http')
     return google.authorize_redirect(redirect_uri, nonce=nonce)
 @app.route('/authorize/google')
 def authorize_google():
@@ -239,7 +243,10 @@ def logout():
     session.pop('user_id', None)
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
-@app.route('/google06a54390fa47b952.html')
+@app.route('/privacy') # dùng đăng ksy google search
+def privacy():
+    return render_template('privacy.html')
+@app.route('/google06a54390fa47b952.html') # dùng đăng ksy google search
 def google06a54390fa47b952():
     return render_template('google06a54390fa47b952.html')
     # return redirect(url_for('google06a54390fa47b952'))
