@@ -18,3 +18,10 @@ pip freeze > requirements.txt
 git add .
 git commit -m "Update requirements and database configuration"
 git push heroku master
+
+
+Google :Use this key in your application by passing it with the key=API_KEY parameter:
+AIzaSyAt_0bV31TBAS4W-d0Nr4Ts2kKU-_xNNQY
+
+Client ID: 206611615101-g9kp571dagj69qn1b0ffb723c8qn9d7q.apps.googleusercontent.com
+Client Secret : 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
