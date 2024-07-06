@@ -243,7 +243,7 @@ def logout():
     session.pop('user_id', None)
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
-@app.route('/privacy') # dùng đăng ksy google search
+@app.route('/privacy.html') # dùng đăng ksy google search
 def privacy():
     return render_template('privacy.html')
 @app.route('/google06a54390fa47b952.html') # dùng đăng ksy google search
