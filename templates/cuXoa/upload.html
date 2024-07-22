@@ -1,13 +1,64 @@
-<!doctype html>
-<html>
-<head>
-    <title>Upload Excel File</title>
-</head>
-<body>
-    <h1>Upload Excel File</h1>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
-    </form>
-</body>
-</html>
+@app.route('/', methods=['GET', 'POST'])
+def upload_and_list_files():
+    if 'user_id' not in session:
+        flash('Please log in to access this page', 'warning')
+        return redirect(url_for('login'))
+    
+    user = User.query.get(session['user_id'])
+    user_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
+    
+    if not os.path.exists(user_folder):
+        os.makedirs(user_folder)
+    
+    if request.method == 'POST':
+        if 'files' in request.files:
+            files = request.files.getlist('files')
+            for file in files:
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join(user_folder, filename)
+                    file.save(filepath)
+            flash('Files uploaded successfully')
+        elif 'merge' in request.form:
+            remove_empty_rows = 'remove_empty' in request.form
+            text_to_remove_list = request.form.getlist('text_to_remove')
+
+            merged_wb = openpyxl.Workbook()
+            merged_ws = merged_wb.active
+            merged_ws.title = 'Merged Data'
+
+            file_names = request.form.getlist('file_names')
+            for index, filename in enumerate(file_names):
+                if allowed_file(filename):
+                    selected_sheet = request.form.get(f'sheets_{index}')
+                    filepath = os.path.join(user_folder, filename)
+                    wb = openpyxl.load_workbook(filepath, data_only=True)
+                    if selected_sheet in wb.sheetnames:
+                        ws = wb[selected_sheet]
+                        for row in ws.iter_rows(values_only=True):
+                            if remove_empty_rows and all(cell is None for cell in row):
+                                continue
+                            if any(text in [str(cell) for cell in row if cell is not None] for text in text_to_remove_list):
+                                continue
+                            merged_ws.append(row)
+
+            merged_filename = 'merged_file.xlsx'
+            merged_filepath = os.path.join(app.config['PROCESSED_FOLDER'], f"{user.id}_{merged_filename}")
+            merged_wb.save(merged_filepath)
+
+            # Gửi file qua email
+            send_merged_file_via_email(user.email, merged_filepath)
+
+            flash('Files merged successfully. The merged file has been sent to your email.')
+            return redirect(url_for('download_file', filename=f"{user.id}_{merged_filename}"))
+
+    files = os.listdir(user_folder)
+    files = [f for f in files if allowed_file(f)]
+    
+    file_sheets = {}
+    for file in files:
+        filepath = os.path.join(user_folder, file)
+        wb = openpyxl.load_workbook(filepath, data_only=True)
+        file_sheets[file] = wb.sheetnames
+
+    return render_template('upload_and_list.html', files=files, file_sheets=file_sheets, user=user)

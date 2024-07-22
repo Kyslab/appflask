@@ -1,0 +1,13 @@
+<!doctype html>
+<html>
+<head>
+    <title>Account</title>
+</head>
+<body>
+    <h1>Account</h1>
+    <p>Email: {{ user.email }}</p>
+    <p>Balance: ${{ user.balance }}</p>
+    <a href="{{ url_for('deposit') }}">Deposit Money</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>

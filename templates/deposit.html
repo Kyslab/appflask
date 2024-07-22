@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+    <title>Deposit</title>
+</head>
+<body>
+    <h1>Deposit Money</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.amount.label }}<br>
+            {{ form.amount(size=32) }}<br>
+            {% for error in form.amount.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p><input type="submit" value="Deposit"></p>
+    </form>
+    <a href="{{ url_for('account') }}">Back to Account</a>
+</body>
+</html>

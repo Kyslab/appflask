@@ -3,14 +3,14 @@
 # app.config['MAIL_PASSWORD'] = 'uhuu dnwi kaiu days'
 # app.config['MAIL_DEFAULT_SENDER'] = 'mergexceltool@gmail.com'
 
-# khi dua lên heroku:
+# khi dua lên heroku thì sửa thành Https:
 # redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
 
     # client_id='206611615101-g9kp571dagj69qn1b0ffb723c8qn9d7q.apps.googleusercontent.com',
     # client_secret='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',
 import secrets
 import os
-from flask import Flask, request, redirect, url_for, send_file, render_template, flash, session
+from flask import Flask, jsonify, request, redirect, url_for, send_file, render_template, flash, session
 from werkzeug.utils import secure_filename
 import openpyxl
 from flask_sqlalchemy import SQLAlchemy
@@ -30,7 +30,7 @@ app = Flask(__name__)
 app.secret_key = 'supersecretkey'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['PROCESSED_FOLDER'] = 'processed'
-app.config['ALLOWED_EXTENSIONS'] = {'xlsx'}
+app.config['ALLOWED_EXTENSIONS'] = {'xlsx','xlsm'}
 
 # @app.before_request
 # def before_request():
@@ -79,6 +79,10 @@ class User(db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
     is_confirmed = db.Column(db.Boolean, default=False)
+    balance = db.Column(db.Float, default=0.0)
+
+class DepositForm(FlaskForm):
+    amount = StringField('Amount', validators=[InputRequired(), Length(min=1, max=20)])
 
 class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), Email(), Length(max=150)])
@@ -114,6 +118,31 @@ def send_reset_email(user):
     link = url_for('reset_token', token=token, _external=True)
     msg.body = f'Please click the following link to reset your password: {link}'
     mail.send(msg)
+@app.route('/deposit', methods=['GET', 'POST'])
+def deposit():
+    if 'user_id' not in session:
+        flash('Please log in to access this page', 'warning')
+        return redirect(url_for('login'))
+
+    form = DepositForm()
+    if form.validate_on_submit():
+        amount = float(form.amount.data)
+        user = User.query.get(session['user_id'])
+        user.balance += amount
+        db.session.commit()
+        flash('Deposit successful. Your new balance is ${:.2f}'.format(user.balance), 'success')
+        return redirect(url_for('account'))
+
+    return render_template('deposit.html', form=form)
+
+@app.route('/account')
+def account():
+    if 'user_id' not in session:
+        flash('Please log in to access this page', 'warning')
+        return redirect(url_for('login'))
+
+    user = User.query.get(session['user_id'])
+    return render_template('account.html', user=user)
 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_request():
@@ -212,8 +241,8 @@ def login():
 def login_google():
     nonce = secrets.token_urlsafe()
     session['nonce'] = nonce
-    redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
-    # redirect_uri = url_for('authorize_google', _external=True, _scheme='http')
+    # redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
+    redirect_uri = url_for('authorize_google', _external=True, _scheme='http')
     return google.authorize_redirect(redirect_uri, nonce=nonce)
 @app.route('/authorize/google')
 def authorize_google():
@@ -243,9 +272,7 @@ def logout():
     session.pop('user_id', None)
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
-# @app.route('/privacy.html') 
-# def privacy():
-#     return render_template('privacy.html')
+
 @app.route('/mprivacy.html') # dùng đăng ksy google search
 def mprivacy():
     return render_template('mprivacy.html')
@@ -258,53 +285,98 @@ def upload_and_list_files():
     if 'user_id' not in session:
         flash('Please log in to access this page', 'warning')
         return redirect(url_for('login'))
-
+    
+    user = User.query.get(session['user_id'])
+    user_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
+    total_size = 0
+    if not os.path.exists(user_folder):
+        os.makedirs(user_folder)
+    
     if request.method == 'POST':
         if 'files' in request.files:
             files = request.files.getlist('files')
             for file in files:
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    filepath = os.path.join(user_folder, filename)
                     file.save(filepath)
+                    total_size += os.path.getsize(filepath)
             flash('Files uploaded successfully')
         elif 'merge' in request.form:
             remove_empty_rows = 'remove_empty' in request.form
             text_to_remove_list = request.form.getlist('text_to_remove')
+            # Sử dụng list comprehension để loại bỏ các phần tử 'on' và ''
+            text_to_remove_list = [text for text in text_to_remove_list if text != 'on' and text != '']
 
             merged_wb = openpyxl.Workbook()
             merged_ws = merged_wb.active
             merged_ws.title = 'Merged Data'
 
-            for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+            file_names = request.form.getlist('file_names')
+            print(f'filenamr {file_names}')
+            # for filename in os.listdir(user_folder):
+            for index, filename in enumerate(file_names):
+                selected_sheet = request.form.get(f'sheets_{index}')
+                print(f'selected_sheet {selected_sheet}')
+                
                 if allowed_file(filename):
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    filepath = os.path.join(user_folder, filename)
                     wb = openpyxl.load_workbook(filepath, data_only=True)
-                    ws = wb.active
-                    for row in ws.iter_rows(values_only=True):
-                        if remove_empty_rows and all(cell is None for cell in row):
-                            continue
-                        if any(text in [str(cell) for cell in row if cell is not None] for text in text_to_remove_list):
-                            continue
-                        merged_ws.append(row)
+                    # ws = wb.active
+                    if selected_sheet in wb.sheetnames:
+                        print('if selected_sheet in wb.sheetnames:')
+                        ws = wb[selected_sheet]
+                        print(f'ws:{ws}')
+                        # ws = wb.active
+                        for row in ws.iter_rows(values_only=True):
+                            if remove_empty_rows and all(cell is None for cell in row):
+                                continue
+                            
+                            if any(text in [str(cell) for cell in row if cell is not None] for text in text_to_remove_list):
+                                continue
+                        
+                            merged_ws.append(row)
 
             merged_filename = 'merged_file.xlsx'
-            merged_filepath = os.path.join(app.config['PROCESSED_FOLDER'], merged_filename)
+            merged_filepath = os.path.join(app.config['PROCESSED_FOLDER'], f"{user.id}_{merged_filename}")
             merged_wb.save(merged_filepath)
+            # Gửi file qua email
+            send_merged_file_via_email('doanvanky36k21@gmail.com', merged_filepath)
+
             flash('Files merged successfully')
-            return redirect(url_for('download_file', filename=merged_filename))
+            return redirect(url_for('download_file', filename=f"{user.id}_{merged_filename}"))
 
-    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    files = os.listdir(user_folder)
     files = [f for f in files if allowed_file(f)]
-    return render_template('upload_and_list.html', files=files)
+    total_size = sum(os.path.getsize(os.path.join(user_folder, f)) for f in files)
+    print(f'total_size {total_size}...len(files:{len(files)} ')
+    # cost_per_file = 1  # Example cost per file
+    # cost_per_mb = 0.1  # Example cost per MB
+    # total_cost = (len(files) * cost_per_file) + ((total_size / (1024 * 1024)) * cost_per_mb)  # Calculate total cost
+    total_cost =  total_size*len(files)/1024/1024/100    
 
+
+    file_sheets = {}
+    for file in files:
+        filepath = os.path.join(user_folder, file)
+        wb = openpyxl.load_workbook(filepath, data_only=True)
+        file_sheets[file] = wb.sheetnames
+    return render_template('upload_and_list.html', files=files, file_sheets=file_sheets, user=user,total_cost=total_cost)
+def send_merged_file_via_email(recipient, filepath):
+    msg = Message('Your Merged File', recipients=[recipient])
+    with app.open_resource(filepath) as fp:
+        msg.attach(os.path.basename(filepath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fp.read())
+    mail.send(msg)
 @app.route('/delete/<filename>', methods=['POST'])
 def delete_file(filename):
     if 'user_id' not in session:
         flash('Please log in to access this page', 'warning')
         return redirect(url_for('login'))
+    
+    user = User.query.get(session['user_id'])
 
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id), filename)
+    
     if os.path.exists(file_path):
         os.remove(file_path)
         flash(f'File {filename} deleted successfully')
@@ -323,6 +395,27 @@ def download_file(filename):
         return send_file(file_path, as_attachment=True)
     else:
         return "File not found", 404
+@app.route('/paypal-transaction-complete', methods=['POST'])
+def paypal_transaction_complete():
+    data = request.json
+    order_id = data['orderID']
+    details = data['details']
+    amount = float(data['amount'])  # Get the amount from the request
+
+    # Assuming you have user_id in session
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    if user:
+        # Update user balance with the specified amount
+        user.balance += amount
+        db.session.commit()
+        flash('Your balance has been updated.', 'success')
+    else:
+        flash('User not found.', 'error')
+
+    return jsonify({'status': 'success'}), 200
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
