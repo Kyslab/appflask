@@ -5,10 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload and List Files</title>
     <script src="https://www.paypal.com/sdk/js?client-id=AQ4anPK0Dv374JlrBVbRHwm4JtPRJ6n1hk8myO9NbkXCLSu5bD3VjC4bDD-UOfYIAP0xHA1JbgN57vBA"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
             padding: 20px;
+        }
+        .account-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .flash-message {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .flash-message-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .flash-message-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
         }
         .container {
             max-width: 800px;
@@ -24,21 +53,75 @@
             align-items: center;
             padding: 5px 0;
         }
+        .spinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Overlay styles */
+        .overlay {
+            display: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2;
+            cursor: pointer;
+        }
+        .hidden {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
+        <div class="overlay" id="overlay">
+            <div class="spinner" id="spinner"></div>
+        </div>
         <h1 class="my-4">Mergexcel Online Tool</h1>
+       
+        <!-- {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div id="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-message-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %} -->
 
         {% if user %}
-            <div class="alert alert-info">
+            <div class="account-info alert alert-info">
                 <p>Email: {{ user.email }}</p>
-                <p>Balance: ${{ user.balance }}</p>
+                
+                <!-- <p>Balance: $<span id="balance">{{ user.balance }}</span>  <label id="flash-messages"></label> </p> -->
+                <p>Balance: $<span id="balance">{{ user.balance }}</span>   </p>
+                <div id="flash-messages"></div>
                 <label for="amount">Amount to deposit:</label>
                 <input type="number" id="amount" name="amount" min="1" step="0.01">
                 <div id="paypal-button-container"></div>
-                <a href="{{ url_for('deposit') }}" class="btn btn-primary">Deposit</a>
+                <!-- <a href="{{ url_for('deposit') }}" class="btn btn-primary">Deposit</a> -->
             </div>
         {% endif %}
 
@@ -50,8 +133,8 @@
             <button type="submit" class="btn btn-success">Upload Files</button>
         </form>
 
-        <h2 class="my-4">Uploaded Files</h2>
-        <ul class="file-list">
+        <!-- <h2 class="my-4">Uploaded Files</h2> -->
+        <!-- <ul class="file-list">
             {% for file in files %}
                 <li>
                     {{ file }}
@@ -61,10 +144,10 @@
                     </form>
                 </li>
             {% endfor %}
-        </ul>
+        </ul> -->
 
         <h2 class="my-4">Option for Merge Files</h2>
-        <form method="POST">
+        <form id="merge-form" method="POST">
             {% for file in files %}
             <li>
                 {{ file }}
@@ -74,17 +157,19 @@
                         <option value="{{ sheet }}">{{ sheet }}</option>
                     {% endfor %}
                 </select>
+                <button type="button" class="btn btn-danger btn-sm delete-file" data-filename="{{ file }}">Delete</button>
                 
             </li>
             {% endfor %}
 
+            <button type="button" id="delete-all-files" class="btn btn-danger">Delete All Files</button>
 
             <input type="hidden" name="merge">
             <div class="form-check mb-2">
                 <input type="checkbox" name="remove_empty" class="form-check-input" id="remove_empty">
                 <label for="remove_empty" class="form-check-label">Remove Empty Rows</label>
             </div>
-            <a>Remove rows if its got following text :</a>
+            <a>Remove rows if its contains following text :</a>
             <div id="text_to_remove_container" class="mb-2">
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -155,8 +240,107 @@
                 });
             }
         }).render('#paypal-button-container');
-    
 
+        
+        // Handle delete file button click with AJAX
+        $(document).on('click', '.delete-file', function() {
+            var filename = $(this).data('filename');
+            $.ajax({
+                type: 'POST',
+                url: '{{ url_for("delete_file", filename="") }}' + filename,
+                success: function(response) {
+                    if (response.flash_message !== undefined) {
+                        var flashMessage = $('<div class="flash-message flash-message-' + response.flash_category + '">' + response.flash_message + '</div>');
+                        $('#flash-messages').append(flashMessage);
+                    }
+                    location.reload(); // Reload the page to update the file list
+                },
+                error: function() {
+                    alert('Error deleting file.');
+                }
+            });
+        });
+        
+        // Handle delete all files button click with AJAX
+        $('#delete-all-files').on('click', function() {
+            $.ajax({
+                type: 'POST',
+                url: '{{ url_for("delete_all_files") }}',
+                success: function(response) {
+                    if (response.flash_message !== undefined) {
+                        var flashMessage = $('<div class="flash-message flash-message-' + response.flash_category + '">' + response.flash_message + '</div>');
+                        $('#flash-messages').append(flashMessage);
+                    }
+                    location.reload(); // Reload the page to update the file list
+                },
+                error: function() {
+                    alert('Error deleting all files.');
+                }
+            });
+        });
+
+
+        // Handle merge form submission with AJAX
+        $('#merge-form').on('submit', function(event) {
+            event.preventDefault();
+            $('#overlay').show();
+            $('#spinner').show();
+            $.ajax({
+                type: 'POST',
+                url: '/',
+                data: $(this).serialize(),
+                success: function(response) {
+                    $('#overlay').hide();
+                    $('#spinner').hide();
+                    if (response.flash_message !== undefined) {
+                        var flashMessage = $('<div class="flash-message flash-message-' + response.flash_category + '">' + response.flash_message + '</div>');
+                        $('#flash-messages').append(flashMessage);
+
+                        // Make the flash message blink without changing layout
+                        var blinkCount = 0;
+                        var blinkInterval = setInterval(function() {
+                            if (blinkCount >= 10) {  // 5 seconds at 500ms interval = 10 blinks
+                                clearInterval(blinkInterval);
+                                return;
+                            }
+                            flashMessage.toggleClass('hidden');
+                            blinkCount++;
+                        }, 500);
+
+                        // Scroll to the top of the page
+                        $('html, body').animate({ scrollTop: 0 }, 'fast');
+                        // If insufficient balance, suggest the amount to deposit
+                        
+                        if ( response.total_cost !== undefined && response.balance !== undefined) {
+                            // alert('If insufficient balance...')
+                            var additionalAmount = (response.total_cost - response.balance).toFixed(2);
+                            $('#amount').val(additionalAmount);
+                        }
+
+                        // Remove flash message after 5 seconds
+                        setTimeout(function() {
+                            flashMessage.remove();
+                        }, 5000);
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        $('#balance').text(response.balance.toFixed(2));
+                        // alert('window.location.href = response.file_url')
+                        if (response.file_url !== undefined) {
+                            //alert('window.location.href = response.file_url')
+                            window.location.href = response.file_url;
+                        }
+                        
+                    }
+                },
+                error: function() {
+                    $('#overlay').hide();
+                    $('#spinner').hide();
+                    alert('Error processing merge.');
+                }
+            });
+        });
     </script>
 </body>
 </html>

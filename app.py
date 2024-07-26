@@ -241,8 +241,8 @@ def login():
 def login_google():
     nonce = secrets.token_urlsafe()
     session['nonce'] = nonce
-    redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
-    # redirect_uri = url_for('authorize_google', _external=True, _scheme='http')
+    # redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
+    redirect_uri = url_for('authorize_google', _external=True, _scheme='http')
     return google.authorize_redirect(redirect_uri, nonce=nonce)
 @app.route('/authorize/google')
 def authorize_google():
@@ -313,8 +313,19 @@ def upload_and_list_files():
             merged_ws.title = 'Merged Data'
 
             file_names = request.form.getlist('file_names')
-            print(f'filenamr {file_names}')
-            # for filename in os.listdir(user_folder):
+
+            total_size = sum(os.path.getsize(os.path.join(user_folder, f)) for f in file_names)
+            total_cost = total_size * len(file_names) / 1024 / 1024 / 100*100000
+
+            if user.balance < total_cost:
+                return jsonify({'flash_message': 'Insufficient balance. Please deposit more funds.', 'flash_category': 'danger','balance':user.balance,'total_cost':total_cost})
+                # flash('Insufficient balance. Please deposit more money.', 'danger')
+                
+                # return redirect(url_for('upload_and_list_files'))
+
+            user.balance -= total_cost
+            db.session.commit()
+
             for index, filename in enumerate(file_names):
                 selected_sheet = request.form.get(f'sheets_{index}')
                 print(f'selected_sheet {selected_sheet}')
@@ -344,7 +355,9 @@ def upload_and_list_files():
             send_merged_file_via_email('doanvanky36k21@gmail.com', merged_filepath)
 
             flash('Files merged successfully')
-            return redirect(url_for('download_file', filename=f"{user.id}_{merged_filename}"))
+            # return redirect(url_for('download_file', filename=f"{user.id}_{merged_filename}"))
+            return jsonify({'balance': user.balance, 'message': 'Files merged successfully', 'file_url': url_for('download_file', filename=f"{user.id}_{merged_filename}")})
+            
 
     files = os.listdir(user_folder)
     files = [f for f in files if allowed_file(f)]
@@ -353,7 +366,7 @@ def upload_and_list_files():
     # cost_per_file = 1  # Example cost per file
     # cost_per_mb = 0.1  # Example cost per MB
     # total_cost = (len(files) * cost_per_file) + ((total_size / (1024 * 1024)) * cost_per_mb)  # Calculate total cost
-    total_cost =  total_size*len(files)/1024/1024/100    
+    total_cost =  total_size*len(files)/1024/1024/100*100000
 
 
     file_sheets = {}
@@ -376,13 +389,36 @@ def delete_file(filename):
     user = User.query.get(session['user_id'])
 
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id), filename)
-    
+    print(file_path)
+    print('file_path')
     if os.path.exists(file_path):
         os.remove(file_path)
         flash(f'File {filename} deleted successfully')
     else:
         flash(f'File {filename} not found')
+    # return jsonify({'flash_message': ' files deleted successfully'}), 200
     return redirect(url_for('upload_and_list_files'))
+
+@app.route('/delete_all_files', methods=['POST'])
+def delete_all_files():
+    if 'user_id' not in session:
+        return jsonify({'flash_message': 'Please log in to access this page', 'flash_category': 'warning'}), 401
+
+    user = User.query.get(session['user_id'])
+    user_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
+    print(user_folder)
+    print('user_folder')
+
+
+
+    for filename in os.listdir(user_folder):
+        file_path = os.path.join(user_folder, filename)
+        if allowed_file(filename):
+            os.remove(file_path)
+
+    flash('All files deleted successfully', 'success')
+    return redirect(url_for('upload_and_list_files'))
+    # return jsonify({'flash_message': 'All files deleted successfully', 'flash_category': 'success'}), 200
 
 @app.route('/download/<filename>')
 def download_file(filename):
@@ -395,6 +431,7 @@ def download_file(filename):
         return send_file(file_path, as_attachment=True)
     else:
         return "File not found", 404
+    
 @app.route('/paypal-transaction-complete', methods=['POST'])
 def paypal_transaction_complete():
     data = request.json
@@ -415,6 +452,7 @@ def paypal_transaction_complete():
         flash('User not found.', 'error')
 
     return jsonify({'status': 'success'}), 200
+
 
 
 if __name__ == "__main__":
