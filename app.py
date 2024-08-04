@@ -3,14 +3,14 @@
 # app.config['MAIL_PASSWORD'] = 'uhuu dnwi kaiu days'
 # app.config['MAIL_DEFAULT_SENDER'] = 'mergexceltool@gmail.com'
 
-# khi dua lên heroku thì sửa thành Https:dong245
+# khi dua lên heroku thì sửa thành Https:
 # redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
 
     # client_id='206611615101-g9kp571dagj69qn1b0ffb723c8qn9d7q.apps.googleusercontent.com',
     # client_secret='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',
 import secrets
 import os
-from flask import Flask, jsonify, request, redirect, url_for, send_file, render_template, flash, session
+from flask import Flask, jsonify, request, redirect, url_for, send_file, render_template, flash, session,send_from_directory
 from werkzeug.utils import secure_filename
 import openpyxl
 from flask_sqlalchemy import SQLAlchemy
@@ -315,7 +315,7 @@ def upload_and_list_files():
             file_names = request.form.getlist('file_names')
 
             total_size = sum(os.path.getsize(os.path.join(user_folder, f)) for f in file_names)
-            total_cost = total_size * len(file_names) / 1024 / 1024 / 100*100000
+            total_cost = total_size * len(file_names) / 1024 / 1024 / 100
 
             if user.balance < total_cost:
                 return jsonify({'flash_message': 'Insufficient balance. Please deposit more funds.', 'flash_category': 'danger','balance':user.balance,'total_cost':total_cost})
@@ -366,7 +366,7 @@ def upload_and_list_files():
     # cost_per_file = 1  # Example cost per file
     # cost_per_mb = 0.1  # Example cost per MB
     # total_cost = (len(files) * cost_per_file) + ((total_size / (1024 * 1024)) * cost_per_mb)  # Calculate total cost
-    total_cost =  total_size*len(files)/1024/1024/100*100000
+    total_cost =  total_size*len(files)/1024/1024/100
 
 
     file_sheets = {}
@@ -452,6 +452,15 @@ def paypal_transaction_complete():
         flash('User not found.', 'error')
 
     return jsonify({'status': 'success'}), 200
+# from flask import send_from_directory
+
+@app.route('/robots.txt')
+def robots_txt():
+    return send_from_directory(app.static_folder, 'robots.txt')
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    return send_from_directory(app.static_folder, 'sitemap.xml')
 
 
 

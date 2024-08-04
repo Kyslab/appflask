@@ -1,11 +1,32 @@
-{% extends "base.html" %}
 
-{% block title %}
-Login
-{% endblock %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="keywords" content="merge excel, online excel tool, hợp nhất tệp excel, công cụ excel trực tuyến">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mergexcel - Công cụ hợp nhất và quản lý tệp Excel trực tuyến.">
+    <title>Mergexcel</title>
+    <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="Website Logo" id="logo"> -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles_login.css') }}">
 
-{% block content %}
-<h1>Login</h1>
+</head>
+<body>
+    <div class="container">
+        <div class="intro">
+            <header>
+                <h1>Welcome to Mergexcel</h1>
+                <p>Mergexcel is an online tool that helps you merge Excel files quickly and efficiently.</p>
+            </header>
+            <section>
+                <h2>Benefits of Mergexcel</h2>
+                <p>If you have dozens or hundreds of excel files that need to be merged, Mergexcel is the appropriate and quick tool to help you save dozens of time.</p>
+            </section>
+        </div>
+        <div class="login">
+            <h2>Đăng nhập để tiếp tục</h2>
+
 <form method="POST">
     {{ form.hidden_tag() }}
     <p>
@@ -23,12 +44,18 @@ Login
         {% endfor %}
     </p>
     <p>
-        {{ form.remember.label }}<br>
         {{ form.remember() }}
+        {{ form.remember.label }}        
     </p>
     <p><input type="submit" value="Login"></p>
 </form>
+
 <a href="{{ url_for('register') }}">Register</a><br>
 <a href="{{ url_for('reset_request') }}">Forgot Password?</a><br>
-<a href="{{ url_for('login_google') }}" class="btn btn-danger">Login with Google</a>
-{% endblock %}
+
+<a href="{{ url_for('login_google') }}" class="btn btn-danger">Or -> Login with Google</a>
+
+</div>
+</div>
+</body>
+</html>

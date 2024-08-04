@@ -2,16 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="keywords" content="merge excel, online excel tool, hợp nhất tệp excel, công cụ excel trực tuyến">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload and List Files</title>
-    <!-- <script src="https://www.paypal.com/sdk/js?client-id=AQ4anPK0Dv374JlrBVbRHwm4JtPRJ6n1hk8myO9NbkXCLSu5bD3VjC4bDD-UOfYIAP0xHA1JbgN57vBA"></script> -->
-    <script src="https://www.paypal.com/sdk/js?client-id=AUxEs4nGbTtxSMnPjoqLABp2FgkZ54XzMNygJsOZZqqyqGjH7TLN3mkckVBl7l1QOAJbIlE-5c99XG0I"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AQ4anPK0Dv374JlrBVbRHwm4JtPRJ6n1hk8myO9NbkXCLSu5bD3VjC4bDD-UOfYIAP0xHA1JbgN57vBA"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <!-- <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Website Logo" id="logo"> -->
+
 </head>
 <body>
 
@@ -35,7 +32,8 @@
 
         {% if user %}
             <div class="account-info alert alert-info">
-                <p>Email: {{ user.email }}</p>                
+                <p>Email: {{ user.email }}</p>
+                
                 <!-- <p>Balance: $<span id="balance">{{ user.balance }}</span>  <label id="flash-messages"></label> </p> -->
                 <p>Balance: $<span id="balance">{{ user.balance }}</span>   </p>
                 <div id="flash-messages"></div>
@@ -43,17 +41,16 @@
                 <input type="number" id="amount" name="amount" min="1" step="0.01">
                 <div id="paypal-button-container"></div>
                 <!-- <a href="{{ url_for('deposit') }}" class="btn btn-primary">Deposit</a> -->
-                <a href="{{ url_for('logout') }}" class="btn btn-link mt-4"><b>Logout</b></a>
+                <a href="{{ url_for('logout') }}" class="btn btn-link mt-4">Logout</a>
             </div>
         {% endif %}
 
-        <h2 id="Upload_Files" class="my-4">    Step 1 : Upload Files (.xlsx)</h2>
+        <h2 id="Upload_Files" class="my-4">Step 1 : Upload Files (.xlsx)</h2>
         <!-- <div id="drop-zone">Drag and drop files here or click to upload</div> -->
         <!-- <div id="drop-zone" class="{{ 'empty' if files|length == 0 else 'not-empty' }}">Drag and drop files here or click to upload</div> -->
         <div id="drop-zone" class="{{ 'empty' if files|length == 0 else 'not-empty' }}">
-            <img src="{{ url_for('static', filename='e.png') }}" id="img" alt="Drag and drop files here">
-            <p id="clickupload" >Drag and drop files here or <b>click to upload</b></p>
-            <p id="clickuploadmore" > <b>Click here to upload more files</b></p>
+            <img src="{{ url_for('static', filename='e.png') }}" alt="Drag and drop files here">
+            <p>Drag and drop files here or click to upload</p>
         </div>
         <form id="upload-form" class="hidden" method="POST" enctype="multipart/form-data">
             <div class="form-group">
@@ -75,42 +72,53 @@
                 </li>
             {% endfor %}
         </ul> -->
-        <div class="container" id="Step2">
-            <div class="flex-container" >
+        <div class="container">
+            <div class="flex-container">
                 <h2 class="my-4">Step 2 : Option for Merge Files</h2>
                 <form method="POST" action="{{ url_for('delete_all_files') }}">
                     <button id="btn-delete" type="submit" class="btn btn-danger">Delete All Files</button>
                 </form>
             </div>
             <!-- Các nội dung khác của bạn -->
-        </div>
-        
+        </div>        
         <form id="merge-form" method="POST">
-           
-            <ul class="file-list">
-            {% for file in files %}
-            <li>
-                {{ file }}
-                <input type="hidden" name="file_names" value="{{ file }}">
-                <select name="sheets_{{ loop.index0 }}" class="sheet-select">
-                    {% for sheet in file_sheets[file] %}
-                        <option value="{{ sheet }}">{{ sheet }}</option>
-                    {% endfor %}
-                </select>
-                <!-- <button type="button" class="btn btn-danger btn-sm delete-file" data-filename="{{ file }}">Delete</button> -->
-                
-            </li>
-            {% endfor %}
-            </ul>
-
             
-
+            {% if files|length > 0 %}
+                <table class="file-list">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Sheet</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                        <tr>
+                            <td>{{ file }}</td>
+                            <td>
+                                <select name="sheets_{{ loop.index0 }}" class="sheet-select">
+                                    {% for sheet in file_sheets[file] %}
+                                        <option value="{{ sheet }}">{{ sheet }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+            
             <input type="hidden" name="merge">
             <div class="form-check mb-2">
                 <input type="checkbox" name="remove_empty" class="form-check-input" id="remove_empty">
                 <label for="remove_empty" class="form-check-label">Remove Empty Rows</label>
             </div>
-            <a>Remove rows if its contains following text :</a>
+            
+        
+        
+        <div class="container">
+            <div class="flex-container2">
+                <a>Remove rows if its contains following text :</a>
             <div id="text_to_remove_container" class="mb-2">
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -122,10 +130,14 @@
                 </div>
             </div>
             <button type="button" id="add_text_to_remove" class="btn btn-secondary mb-2">+</button>
-            <a>add_text_to_remove</a>
-        </br>
+            
+            </div>
+        </div> 
+        
+        
+        
         <p> 
-            <button type="submit" class="btn btn-primary">Let's Merge Your Files</button>
+            <button type="submit" class="btn btn-primary">Merge Files</button>
             <span>Total Cost: ${{ total_cost }}</span>
         </p>
         </form>
@@ -189,38 +201,25 @@
             var Upload_Files = document.getElementById('Upload_Files');
             var Uploaded_Files = document.getElementById('Uploaded_Files');
             // var btnsuccess = document.getElementById('btn-success');
-            var Step2 = document.getElementById('Step2');
-            // var mergeForm = document.getElementById('merge-form');  btn-delete Uploaded_Files 
+            var btn_delete = document.getElementById('btn-delete');
+            // var mergeForm = document.getElementById('merge-form');  btn-delete Uploaded_Files
             var dropZone = document.getElementById('drop-zone');
-            var img = document.getElementById('img');
-            var clickupload = document.getElementById('clickupload');
-            var clickuploadmore = document.getElementById('clickuploadmore');
-
             if (fileList.children.length === 0) {
                 mergeForm.style.display = 'none';
-                // Upload_Files.style.display = 'none';
-                // img.style.display = 'block';
-                Step2.style.display = 'none';
-                clickupload.style.display = 'block';
-                clickuploadmore.style.display = 'none';
-
+                //Upload_Files.style.display = 'none';
+                // btnsuccess.style.display = 'none';
+                btn_delete.style.display = 'none';
                 Uploaded_Files.style.display = 'none';
                 dropZone.classList.add('empty');
                 dropZone.classList.remove('not-empty');
-
             } else {
                 mergeForm.style.display = 'block';
-                Upload_Files.style.display = 'block';
-                img.style.display = 'none';
-                Step2.style.display = 'block';
-                
-                clickupload.style.display = 'none';
-                clickuploadmore.style.display = 'block';
+                //Upload_Files.style.display = 'block';
+                // btnsuccess.style.display = 'block';
+                btn_delete.style.display = 'block';
                 Uploaded_Files.style.display = 'block';
                 dropZone.classList.add('not-empty');
                 dropZone.classList.remove('empty');
-                
-                
             
             }
         });

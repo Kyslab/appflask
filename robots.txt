@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /confirm_email
+Disallow: /upload
+Allow: /login
+Sitemap: https://mergexcel-cdeacc33d416.herokuapp.com/sitemap.xml
