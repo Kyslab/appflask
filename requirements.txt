@@ -22,3 +22,4 @@ email_validator
 Flask-Mail
 Flask-OAuthlib
 Authlib
+paypalrestsdk

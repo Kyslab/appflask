@@ -24,6 +24,7 @@ from urllib.parse import quote as url_quote
 from authlib.integrations.flask_client import OAuth
 from authlib.integrations.base_client.errors import OAuthError
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
+import paypalrestsdk
 
 
 app = Flask(__name__)
@@ -72,6 +73,14 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 if not os.path.exists(app.config['PROCESSED_FOLDER']):
     os.makedirs(app.config['PROCESSED_FOLDER'])
+
+
+# Cấu hình SDK của PayPal
+paypalrestsdk.configure({
+    "mode": "live",  # Chế độ sandbox để thử nghiệm, chuyển sang "live" để sản xuất
+    "client_id": "AUxEs4nGbTtxSMnPjoqLABp2FgkZ54XzMNygJsOZZqqyqGjH7TLN3mkckVBl7l1QOAJbIlE-5c99XG0I",
+    "client_secret": "EEpk9gH1CvZIEVc9EwKPcXghw1M61CfDoTz96zeIRbHK7j1B5U2ktIW-iXZnTIQHmpQ8iDyiCAzFnQ3B"
+})
 
 # Define the User model
 class User(db.Model):
@@ -432,27 +441,56 @@ def download_file(filename):
     else:
         return "File not found", 404
     
+# @app.route('/paypal-transaction-complete', methods=['POST'])
+# def paypal_transaction_complete():
+#     data = request.json
+#     order_id = data['orderID']
+#     details = data['details']
+#     amount = float(data['amount'])  # Get the amount from the request
+
+#     # Assuming you have user_id in session
+#     user_id = session['user_id']
+#     user = User.query.get(user_id)
+
+#     if user:
+#         # Update user balance with the specified amount
+#         user.balance += amount
+#         db.session.commit()
+#         flash('Your balance has been updated.', 'success')
+#     else:
+#         flash('User not found.', 'error')
+
+#     return jsonify({'status': 'success'}), 200
 @app.route('/paypal-transaction-complete', methods=['POST'])
 def paypal_transaction_complete():
     data = request.json
     order_id = data['orderID']
-    details = data['details']
-    amount = float(data['amount'])  # Get the amount from the request
+    amount = float(data['amount'])  # Lấy số tiền từ request
 
-    # Assuming you have user_id in session
-    user_id = session['user_id']
-    user = User.query.get(user_id)
+    # Xác thực giao dịch với PayPal
+    try:
+        payment = paypalrestsdk.Payment.find(order_id)
+        if payment.state == "approved":
+            # Assuming you have user_id in session
+            user_id = session['user_id']
+            user = User.query.get(user_id)
 
-    if user:
-        # Update user balance with the specified amount
-        user.balance += amount
-        db.session.commit()
-        flash('Your balance has been updated.', 'success')
-    else:
-        flash('User not found.', 'error')
+            if user:
+                # Cập nhật số dư của người dùng với số tiền đã nạp
+                user.balance += amount
+                db.session.commit()
+                flash('Your balance has been updated.', 'success')
+            else:
+                flash('User not found.', 'error')
 
-    return jsonify({'status': 'success'}), 200
-# from flask import send_from_directory
+            return jsonify({'status': 'success'}), 200
+        else:
+            flash('Payment not approved.', 'error')
+            return jsonify({'status': 'failed', 'reason': 'Payment not approved'}), 400
+    except paypalrestsdk.ResourceNotFound as error:
+        flash('Payment not found.', 'error')
+        return jsonify({'status': 'failed', 'reason': 'Payment not found'}), 404
+
 
 @app.route('/robots.txt')
 def robots_txt():
