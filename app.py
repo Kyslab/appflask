@@ -25,7 +25,7 @@ from authlib.integrations.flask_client import OAuth
 from authlib.integrations.base_client.errors import OAuthError
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 import paypalrestsdk
-
+from decimal import Decimal, ROUND_UP
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -81,7 +81,9 @@ paypalrestsdk.configure({
     "client_id": "AUxEs4nGbTtxSMnPjoqLABp2FgkZ54XzMNygJsOZZqqyqGjH7TLN3mkckVBl7l1QOAJbIlE-5c99XG0I",
     "client_secret": "EEpk9gH1CvZIEVc9EwKPcXghw1M61CfDoTz96zeIRbHK7j1B5U2ktIW-iXZnTIQHmpQ8iDyiCAzFnQ3B"
 })
-
+def roundup(number, decimals=0):
+    factor = Decimal(10) ** -decimals
+    return Decimal(number).quantize(factor, rounding=ROUND_UP)
 # Define the User model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -89,6 +91,7 @@ class User(db.Model):
     password = db.Column(db.String(150), nullable=False)
     is_confirmed = db.Column(db.Boolean, default=False)
     balance = db.Column(db.Float, default=0.0)
+
 
 class DepositForm(FlaskForm):
     amount = StringField('Amount', validators=[InputRequired(), Length(min=1, max=20)])
@@ -383,7 +386,8 @@ def upload_and_list_files():
         filepath = os.path.join(user_folder, file)
         wb = openpyxl.load_workbook(filepath, data_only=True)
         file_sheets[file] = wb.sheetnames
-    return render_template('upload_and_list.html', files=files, file_sheets=file_sheets, user=user,total_cost=total_cost)
+    user.balance=roundup(user.balance,3)
+    return render_template('upload_and_list.html', files=files, file_sheets=file_sheets, user=user,total_cost=roundup(total_cost,3))
 def send_merged_file_via_email(recipient, filepath):
     msg = Message('Your Merged File', recipients=[recipient])
     with app.open_resource(filepath) as fp:
