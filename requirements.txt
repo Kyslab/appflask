@@ -23,4 +23,4 @@ Flask-Mail
 Flask-OAuthlib
 Authlib
 paypalrestsdk
-decimal
+decimal==3.11.5
