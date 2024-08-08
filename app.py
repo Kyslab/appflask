@@ -77,9 +77,13 @@ if not os.path.exists(app.config['PROCESSED_FOLDER']):
 
 # Cấu hình SDK của PayPal
 paypalrestsdk.configure({
-    "mode": "live",  # Chế độ sandbox để thử nghiệm, chuyển sang "live" để sản xuất
-    "client_id": "AUxEs4nGbTtxSMnPjoqLABp2FgkZ54XzMNygJsOZZqqyqGjH7TLN3mkckVBl7l1QOAJbIlE-5c99XG0I",
-    "client_secret": "EEpk9gH1CvZIEVc9EwKPcXghw1M61CfDoTz96zeIRbHK7j1B5U2ktIW-iXZnTIQHmpQ8iDyiCAzFnQ3B"
+    # "mode": "live",  # Chế độ sandbox để thử nghiệm, chuyển sang "live" để sản xuất
+    # "client_id": "AUxEs4nGbTtxSMnPjoqLABp2FgkZ54XzMNygJsOZZqqyqGjH7TLN3mkckVBl7l1QOAJbIlE-5c99XG0I",
+    # "client_secret": "EEpk9gH1CvZIEVc9EwKPcXghw1M61CfDoTz96zeIRbHK7j1B5U2ktIW-iXZnTIQHmpQ8iDyiCAzFnQ3B"
+    "mode": "sandbox",  # Chế độ sandbox để thử nghiệm, chuyển sang "live" để sản xuất
+    "client_id": "AQ4anPK0Dv374JlrBVbRHwm4JtPRJ6n1hk8myO9NbkXCLSu5bD3VjC4bDD-UOfYIAP0xHA1JbgN57vBA",
+    "client_secret": "ELPxD1aZbDCIub4HzdLxDUQ1nTLEQMBpNisFuW1MXo3kJ3VP9ZLDjL7lGoCMUWGNlxw8k9lAmBkYtAa3"
+
 })
 def roundup(number, decimals=0):
     factor = Decimal(10) ** -decimals
