@@ -77,12 +77,12 @@ if not os.path.exists(app.config['PROCESSED_FOLDER']):
 
 # Cấu hình SDK của PayPal
 paypalrestsdk.configure({
-    # "mode": "live",  # Chế độ sandbox để thử nghiệm, chuyển sang "live" để sản xuất
-    # "client_id": "AUxEs4nGbTtxSMnPjoqLABp2FgkZ54XzMNygJsOZZqqyqGjH7TLN3mkckVBl7l1QOAJbIlE-5c99XG0I",
-    # "client_secret": "EEpk9gH1CvZIEVc9EwKPcXghw1M61CfDoTz96zeIRbHK7j1B5U2ktIW-iXZnTIQHmpQ8iDyiCAzFnQ3B"
-    "mode": "sandbox",  # Chế độ sandbox để thử nghiệm, chuyển sang "live" để sản xuất
-    "client_id": "AQ4anPK0Dv374JlrBVbRHwm4JtPRJ6n1hk8myO9NbkXCLSu5bD3VjC4bDD-UOfYIAP0xHA1JbgN57vBA",
-    "client_secret": "ELPxD1aZbDCIub4HzdLxDUQ1nTLEQMBpNisFuW1MXo3kJ3VP9ZLDjL7lGoCMUWGNlxw8k9lAmBkYtAa3"
+    "mode": "live",  # Chế độ sandbox để thử nghiệm, chuyển sang "live" để sản xuất
+    "client_id": "AUxEs4nGbTtxSMnPjoqLABp2FgkZ54XzMNygJsOZZqqyqGjH7TLN3mkckVBl7l1QOAJbIlE-5c99XG0I",
+    "client_secret": "EEpk9gH1CvZIEVc9EwKPcXghw1M61CfDoTz96zeIRbHK7j1B5U2ktIW-iXZnTIQHmpQ8iDyiCAzFnQ3B"
+    # "mode": "sandbox",  # Chế độ sandbox để thử nghiệm, chuyển sang "live" để sản xuất
+    # "client_id": "AQ4anPK0Dv374JlrBVbRHwm4JtPRJ6n1hk8myO9NbkXCLSu5bD3VjC4bDD-UOfYIAP0xHA1JbgN57vBA",
+    # "client_secret": "ELPxD1aZbDCIub4HzdLxDUQ1nTLEQMBpNisFuW1MXo3kJ3VP9ZLDjL7lGoCMUWGNlxw8k9lAmBkYtAa3"
 
 })
 def roundup(number, decimals=0):
@@ -449,55 +449,54 @@ def download_file(filename):
     else:
         return "File not found", 404
     
-# @app.route('/paypal-transaction-complete', methods=['POST'])
-# def paypal_transaction_complete():
-#     data = request.json
-#     order_id = data['orderID']
-#     details = data['details']
-#     amount = float(data['amount'])  # Get the amount from the request
-
-#     # Assuming you have user_id in session
-#     user_id = session['user_id']
-#     user = User.query.get(user_id)
-
-#     if user:
-#         # Update user balance with the specified amount
-#         user.balance += amount
-#         db.session.commit()
-#         flash('Your balance has been updated.', 'success')
-#     else:
-#         flash('User not found.', 'error')
-
-#     return jsonify({'status': 'success'}), 200
 @app.route('/paypal-transaction-complete', methods=['POST'])
 def paypal_transaction_complete():
     data = request.json
     order_id = data['orderID']
-    amount = float(data['amount'])  # Lấy số tiền từ request
+    details = data['details']
+    amount = float(data['amount'])  # Get the amount from the request
 
-    # Xác thực giao dịch với PayPal
-    try:
-        payment = paypalrestsdk.Payment.find(order_id)
-        if payment.state == "approved":
-            # Assuming you have user_id in session
-            user_id = session['user_id']
-            user = User.query.get(user_id)
+    # Assuming you have user_id in session
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    if user:
+        # Update user balance with the specified amount
+        user.balance += amount
+        db.session.commit()
+        flash('Your balance has been updated.', 'success')
+    else:
+        flash('User not found.', 'error')
 
-            if user:
-                # Cập nhật số dư của người dùng với số tiền đã nạp
-                user.balance += amount
-                db.session.commit()
-                flash('Your balance has been updated.', 'success')
-            else:
-                flash('User not found.', 'error')
+    return jsonify({'status': 'success'}), 200
+# @app.route('/paypal-transaction-complete', methods=['POST'])
+# def paypal_transaction_complete():
+#     data = request.json
+#     order_id = data['orderID']
+#     amount = float(data['amount'])  # Lấy số tiền từ request
 
-            return jsonify({'status': 'success'}), 200
-        else:
-            flash('Payment not approved.', 'error')
-            return jsonify({'status': 'failed', 'reason': 'Payment not approved'}), 400
-    except paypalrestsdk.ResourceNotFound as error:
-        flash('Payment not found.', 'error')
-        return jsonify({'status': 'failed', 'reason': 'Payment not found'}), 404
+#     # Xác thực giao dịch với PayPal
+#     try:
+#         payment = paypalrestsdk.Payment.find(order_id)
+#         if payment.state == "approved":
+#             # Assuming you have user_id in session
+#             user_id = session['user_id']
+#             user = User.query.get(user_id)
+
+#             if user:
+#                 # Cập nhật số dư của người dùng với số tiền đã nạp
+#                 user.balance += amount
+#                 db.session.commit()
+#                 flash('Your balance has been updated.', 'success')
+#             else:
+#                 flash('User not found.', 'error')
+
+#             return jsonify({'status': 'success'}), 200
+#         else:
+#             flash('Payment not approved.', 'error')
+#             return jsonify({'status': 'failed', 'reason': 'Payment not approved'}), 400
+#     except paypalrestsdk.ResourceNotFound as error:
+#         flash('Payment not found.', 'error')
+#         return jsonify({'status': 'failed', 'reason': 'Payment not found'}), 404
 
 
 @app.route('/robots.txt')
