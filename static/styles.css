@@ -15,6 +15,19 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     overflow-y: auto; /* Add vertical scroll if content exceeds max-height */
 }
+#flash-messages-container {
+    height: 100px; /* Đặt chiều cao cố định cho khung */
+    overflow: hidden; /* Ẩn bất kỳ phần nào của nội dung vượt quá chiều cao khung */
+}
+
+.flash-message {
+    font-size: 16px;
+    line-height: 40px; /* Điều chỉnh để nội dung canh giữa theo chiều dọc */
+}
+
+.flash-message.hidden {
+    visibility: hidden; /* Ẩn thông báo mà không làm thay đổi kích thước phần tử */
+}
 .flash-message {
     padding: 10px;
     margin: 10px 0;

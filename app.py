@@ -170,8 +170,11 @@ def reset_request():
         if user:
             send_reset_email(user)
         flash('An email has been sent with instructions to reset your password.', 'info')
-        return redirect(url_for('login'))
+        return redirect(url_for('reset_ok'))
     return render_template('reset_request.html', form=form)
+@app.route('/reset_ok')
+def reset_ok():
+    return render_template('reset_ok.html')
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_token(token):
@@ -257,8 +260,8 @@ def login():
 def login_google():
     nonce = secrets.token_urlsafe()
     session['nonce'] = nonce
-    redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
-    # redirect_uri = url_for('authorize_google', _external=True, _scheme='http')
+    # redirect_uri = url_for('authorize_google', _external=True, _scheme='https')
+    redirect_uri = url_for('authorize_google', _external=True, _scheme='http')
     return google.authorize_redirect(redirect_uri, nonce=nonce)
 @app.route('/authorize/google')
 def authorize_google():

@@ -1,9 +1,25 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-    <title>Request Password Reset</title>
+    <meta charset="UTF-8">
+    <meta name="keywords" content="merge excel, online excel tool, hợp nhất tệp excel, công cụ excel trực tuyến">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mergexcel - Công cụ hợp nhất các tệp Excel trực tuyến.">
+    <title>Mergexcel</title>
+    <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="Website Logo" id="logo"> -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles_login.css') }}">
+
 </head>
 <body>
+        <!-- Thêm các hình dạng vào nền -->
+        <div class="background-shape shape-1"></div>
+        <div class="background-shape shape-2"></div>
+        <div class="background-shape shape-3"></div>
+        <div class="background-shape shape-4"></div>
+        <div class="background-shape shape-5"></div>
+        <div class="container">
+            <div class="intro">
     <h1>Request Password Reset</h1>
     <form method="POST">
         {{ form.hidden_tag() }}
@@ -17,5 +33,7 @@
         <p><input type="submit" value="Request Password Reset"></p>
     </form>
     <a href="{{ url_for('login') }}">Back to Login</a>
+</div>
+</div>
 </body>
 </html>

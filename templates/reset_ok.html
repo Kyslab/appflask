@@ -19,26 +19,11 @@
         <div class="background-shape shape-4"></div>
         <div class="background-shape shape-5"></div>
         <div class="container">
-        <div class="intro">
-    <h1>Reset Password</h1>
-    <form method="POST">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=32) }}<br>
-            {% for error in form.password.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.confirm_password.label }}<br>
-            {{ form.confirm_password(size=32) }}<br>
-            {% for error in form.confirm_password.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p><input type="submit" value="Reset Password"></p>
-    </form>
+            <div class="intro">
+    <h1>Check your email</h1>   
+        
+        <h5>An email has been sent with a link to reset your password. Let's take it within 5 minutes .</h5>
+    
     <a href="{{ url_for('login') }}">Back to Login</a>
 </div>
 </div>

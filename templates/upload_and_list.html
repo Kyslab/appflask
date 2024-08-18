@@ -38,7 +38,10 @@
                 <p>Email: {{ user.email }}</p>                
                 <!-- <p>Balance: $<span id="balance">{{ user.balance }}</span>  <label id="flash-messages"></label> </p> -->
                 <p>Balance: $<span id="balance">{{ user.balance }}</span>   </p>
-                <div id="flash-messages"></div>
+                <!-- <div id="flash-messages"></div> -->
+                <div id="flash-messages-container">
+                    <div id="flash-messages"></div>
+                </div>
                 <label for="amount">Amount to deposit:</label>
                 <input type="number" id="amount" name="amount" min="1" step="0.01">
                 <div id="paypal-button-container"></div>
@@ -190,11 +193,15 @@
             var Uploaded_Files = document.getElementById('Uploaded_Files');
             // var btnsuccess = document.getElementById('btn-success');
             var Step2 = document.getElementById('Step2');
-            // var mergeForm = document.getElementById('merge-form');  btn-delete Uploaded_Files 
+            // var mergeForm = document.getElementById('merge-form');  btn-delete Uploaded_Files  "flash-messages-container"
             var dropZone = document.getElementById('drop-zone');
             var img = document.getElementById('img');
             var clickupload = document.getElementById('clickupload');
             var clickuploadmore = document.getElementById('clickuploadmore');
+            var flash = document.getElementById('flash-messages-container');
+            flash.style.display = 'none';
+
+
 
             if (fileList.children.length === 0) {
                 mergeForm.style.display = 'none';
@@ -277,9 +284,12 @@
                     $('#spinner').hide();
                     if (response.flash_message !== undefined) {
                         var flashMessage = $('<div class="flash-message flash-message-' + response.flash_category + '">' + response.flash_message + '</div>');
-                        $('#flash-messages').append(flashMessage);
+                        $('#flash-messages').empty().append(flashMessage); // Thêm flash message mới vào khung
+                        
+                        // $('#flash-messages').append(flashMessage);
 
                         // Make the flash message blink without changing layout
+                        $('#flash-messages-container').show();
                         var blinkCount = 0;
                         var blinkInterval = setInterval(function() {
                             if (blinkCount >= 10) {  // 5 seconds at 500ms interval = 10 blinks
@@ -289,6 +299,7 @@
                             flashMessage.toggleClass('hidden');
                             blinkCount++;
                         }, 500);
+                        
 
                         // Scroll to the top of the page
                         $('html, body').animate({ scrollTop: 0 }, 'fast');
@@ -296,14 +307,16 @@
                         
                         if ( response.total_cost !== undefined && response.balance !== undefined) {
                             // alert('If insufficient balance...')
-                            var additionalAmount = (response.total_cost - response.balance).toFixed(2);
+                            var additionalAmount = (1+response.total_cost - response.balance).toFixed(2);
                             $('#amount').val(additionalAmount);
                         }
 
                         // Remove flash message after 5 seconds
                         setTimeout(function() {
                             flashMessage.remove();
+                            $('#flash-messages-container').hide();
                         }, 5000);
+                        
                     }
                     if (response.error) {
                         alert(response.error);
@@ -322,6 +335,7 @@
                     $('#spinner').hide();
                     alert('Error processing merge.');
                 }
+                
             });
         });
                 // Drag and Drop functionality
