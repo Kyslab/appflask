@@ -18,15 +18,9 @@
     <div class="background-shape shape-3"></div>
     <div class="background-shape shape-4"></div>
     <div class="background-shape shape-5"></div>
-    
+    <div class="container">
         <div class="intro">
-{% extends "base.html" %}
 
-{% block title %}
-Register
-{% endblock %}
-
-{% block content %}
 <h1>Register</h1>
 <form method="POST">
     {{ form.hidden_tag() }}
@@ -47,8 +41,8 @@ Register
     <p><input type="submit" value="Register"></p>
 </form>
 <a href="{{ url_for('login') }}">Login</a>
-{% endblock %}
-</div>
 
+</div>
+</div>
 </body>
 </html>
