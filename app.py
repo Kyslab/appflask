@@ -253,7 +253,8 @@ def login():
             # flash('Logged in successfully', 'success')
             return redirect(url_for('upload_and_list_files'))
         else:
-            flash('Login Unsuccessful. Please check email and password or log in with Google.', 'danger')
+            return jsonify({'message': 'Login Unsuccessful. Please check email and password or log in with Google.', 'type': 'danger'}), 401
+            # flash('Login Unsuccessful. Please check email and password or log in with Google.', 'danger')
     return render_template('login.html', form=form)
 
 @app.route('/login/google')

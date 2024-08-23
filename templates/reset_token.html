@@ -43,4 +43,19 @@
 </div>
 </div>
 </body>
+<script>
+    // Hàm để hiển thị cảnh báo
+    function showAlert(message, type = 'danger') {
+        var alertContainer = document.getElementById('alert-container');
+        alertContainer.innerText = message;
+        alertContainer.classList.remove('alert-danger', 'alert-success', 'alert-warning', 'alert-info');
+        alertContainer.classList.add('alert-' + type);
+        alertContainer.style.display = 'block';
+
+        // Ẩn cảnh báo sau 5 giây
+        setTimeout(function() {
+            alertContainer.style.display = 'none';
+        }, 5000);
+    }
+</script>
 </html>
