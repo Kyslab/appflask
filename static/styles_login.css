@@ -169,3 +169,33 @@ button[type="submit"]:hover {
     right: 1150px;
     animation-delay: 1s;
 }
+#flash-messages-container {
+    height: 50px; /* Đặt chiều cao cố định cho khung */
+    overflow: hidden; /* Ẩn bất kỳ phần nào của nội dung vượt quá chiều cao khung */
+}
+
+.flash-message {
+    font-size: 16px;
+    line-height: 40px; /* Điều chỉnh để nội dung canh giữa theo chiều dọc */
+}
+
+.flash-message.hidden {
+    visibility: hidden; /* Ẩn thông báo mà không làm thay đổi kích thước phần tử */
+}
+.flash-message {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: opacity 0.5s ease-in-out;
+}
+.flash-message-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+.flash-message-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}

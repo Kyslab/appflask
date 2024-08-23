@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Mergexcel - Công cụ hợp nhất các tệp Excel trực tuyến.">
     <title>Mergexcel</title>
+    <!-- <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"> -->
     <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="Website Logo" id="logo"> -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles_login.css') }}">
@@ -18,10 +19,7 @@
         <div class="background-shape shape-3"></div>
         <div class="background-shape shape-4"></div>
         <div class="background-shape shape-5"></div>
-
-        
     <div class="container">
-        
         <div class="intro">
             <header>
                 <h1>Welcome to Mergexcel</h1>
@@ -34,8 +32,8 @@
         </div>
 <div class="login">
             <h2>Login to continue </h2>
-            <!-- <div id="alert-container" style="display: none;" class="alert"></div> -->
-<form id=login-form method="POST">
+
+<form method="POST">
     {{ form.hidden_tag() }}
     <p>
         {{ form.email.label }}<br>
@@ -51,6 +49,7 @@
             <span style="color: red;">[{{ error }}]</span>
         {% endfor %}
     </p>
+    <div id="alert-container" class="alert" style="display: none;"></div>
     <p>
         {{ form.remember() }}
         {{ form.remember.label }}        
@@ -69,46 +68,24 @@
 </body>
 <script>
     // Hàm để hiển thị cảnh báo
-    // function showAlert(message, type = 'danger') {
-    //     var alertContainer = document.getElementById('alert-container');
-    //     alertContainer.innerText = message;
-    //     alertContainer.classList.remove('alert-danger', 'alert-success', 'alert-warning', 'alert-info');
-    //     alertContainer.classList.add('alert-' + type);
-    //     alertContainer.style.display = 'block';
+    function showAlert(message, type = 'danger') {
+        var alertContainer = document.getElementById('alert-container');
+        alertContainer.innerText = message;
+        alertContainer.classList.remove('alert-danger', 'alert-success', 'alert-warning', 'alert-info');
+        alertContainer.classList.add('alert-' + type);
+        alertContainer.style.display = 'block';
+    }
 
-    //     // Ẩn cảnh báo sau 5 giây
-    //     setTimeout(function() {
-    //         alertContainer.style.display = 'none';
-    //     }, 5000);
-    // }
-    document.addEventListener('DOMContentLoaded', function () {
-        var loginForm = document.getElementById('login-form');
-
-        loginForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            var formData = new FormData(loginForm);
-
-            fetch('/login', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => { throw data });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Thành công: Chuyển hướng người dùng hoặc thực hiện hành động khác
-                window.location.href = '/';
-            })
-            .catch(error => {
-                // Hiển thị cảnh báo khi có lỗi
-                // showAlert(error.message, error.type);
-                alert(error.message)
-            });
-        });
+    // Hiển thị thông báo từ Flask (flash)
+    document.addEventListener('DOMContentLoaded', function() {
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        showAlert("{{ message }}", "{{ category }}");
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
     });
 </script>
+
 </html>

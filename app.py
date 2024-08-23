@@ -253,8 +253,7 @@ def login():
             # flash('Logged in successfully', 'success')
             return redirect(url_for('upload_and_list_files'))
         else:
-            return jsonify({'message': 'Login Unsuccessful. Please check email and password or log in with Google.', 'type': 'danger'}), 401
-            # flash('Login Unsuccessful. Please check email and password or log in with Google.', 'danger')
+            flash('Login Unsuccessful. Please check email and password or log in with Google.', 'danger')
     return render_template('login.html', form=form)
 
 @app.route('/login/google')
@@ -290,7 +289,7 @@ def authorize_google():
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
-    flash('You have been logged out.', 'success')
+    # flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
 
 @app.route('/mprivacy.html') # dùng đăng ksy google search
