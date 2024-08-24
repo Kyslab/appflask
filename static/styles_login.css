@@ -199,3 +199,9 @@ button[type="submit"]:hover {
     background-color: #f8d7da;
     border-color: #f5c6cb;
 }
+.custom-alert {
+    color: #fb0505;
+    background-color: #02fc0f; /* Màu đỏ */
+    border-color: #dc3545;
+    align-content: center;
+}

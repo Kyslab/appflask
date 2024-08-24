@@ -49,7 +49,7 @@
             <span style="color: red;">[{{ error }}]</span>
         {% endfor %}
     </p>
-    <div id="alert-container" class="alert" style="display: none;"></div>
+    <div id="alert-container" class="alert custom-alert" style="display: none;"></div>
     <p>
         {{ form.remember() }}
         {{ form.remember.label }}        
@@ -72,8 +72,13 @@
         var alertContainer = document.getElementById('alert-container');
         alertContainer.innerText = message;
         alertContainer.classList.remove('alert-danger', 'alert-success', 'alert-warning', 'alert-info');
-        alertContainer.classList.add('alert-' + type);
+        alertContainer.classList.add('alert-' + type, 'custom-alert');
         alertContainer.style.display = 'block';
+
+        // Tự động ẩn sau 10 giây
+        setTimeout(function() {
+            alertContainer.style.display = 'none';
+        }, 6000); // 10000 ms = 10 giây
     }
 
     // Hiển thị thông báo từ Flask (flash)

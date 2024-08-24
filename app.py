@@ -253,7 +253,7 @@ def login():
             # flash('Logged in successfully', 'success')
             return redirect(url_for('upload_and_list_files'))
         else:
-            flash('Login Unsuccessful. Please check email and password or log in with Google.', 'danger')
+            flash('Login fail, try again or log in with Google.', 'danger')
     return render_template('login.html', form=form)
 
 @app.route('/login/google')
@@ -302,7 +302,7 @@ def google06a54390fa47b952():
 @app.route('/', methods=['GET', 'POST'])
 def upload_and_list_files():
     if 'user_id' not in session:
-        flash('Please log in to access this page', 'warning')
+        # flash('Please log in to access this page', 'warning')
         return redirect(url_for('login'))
     
     user = User.query.get(session['user_id'])

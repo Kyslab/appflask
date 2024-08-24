@@ -356,8 +356,11 @@
         dropZone.addEventListener('drop', function(e) {
             e.preventDefault();
             dropZone.classList.remove('dragover');
+            $('#overlay').show();
+            $('#spinner').show();
             var files = e.dataTransfer.files;
             var formData = new FormData(uploadForm);
+
             for (var i = 0; i < files.length; i++) {
                 formData.append('files', files[i]);
             }
@@ -390,6 +393,8 @@
         fileInput.addEventListener('change', function() {
             var files = fileInput.files;
             var formData = new FormData(uploadForm);
+            $('#overlay').show();
+            $('#spinner').show();
             for (var i = 0; i < files.length; i++) {
                 formData.append('files', files[i]);
             }
