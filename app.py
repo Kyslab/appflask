@@ -95,6 +95,7 @@ class User(db.Model):
     password = db.Column(db.String(150), nullable=False)
     is_confirmed = db.Column(db.Boolean, default=False)
     balance = db.Column(db.Float, default=0.0)
+    is_first_login = db.Column(db.Boolean, default=True)
 
 
 class DepositForm(FlaskForm):
@@ -251,6 +252,14 @@ def login():
         if user and user.password == form.password.data:
             session['user_id'] = user.id
             # flash('Logged in successfully', 'success')
+            # Kiểm tra nếu đây là lần đăng nhập đầu tiên
+            if user.is_first_login:
+                user.balance += 3.0  # Cộng 3 USD vào tài khoản
+                user.is_first_login = False  # Đánh dấu đã đăng nhập lần đầu
+                db.session.commit()  # Lưu thay đổi vào cơ sở dữ liệu
+
+                flash('Welcome! You have received a $3 bonus for your first login.', 'success')
+
             return redirect(url_for('upload_and_list_files'))
         else:
             flash('Login fail, try again or log in with Google.', 'danger')
@@ -278,6 +287,14 @@ def authorize_google():
             db.session.commit()
 
         session['user_id'] = user.id
+        # Kiểm tra nếu đây là lần đăng nhập đầu tiên
+        if user.is_first_login:
+            user.balance += 3.0  # Cộng 3 USD vào tài khoản
+            user.is_first_login = False  # Đánh dấu đã đăng nhập lần đầu
+            db.session.commit()  # Lưu thay đổi vào cơ sở dữ liệu
+
+            flash('Welcome! You have received a $3 bonus for your first login.', 'success')
+
         flash('Logged in successfully with Google.', 'success')
         return redirect(url_for('upload_and_list_files'))
     except OAuthError as e:
