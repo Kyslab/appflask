@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search</title>
+    <style>
+        #results-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        #results-table th, #results-table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            background-color: #3cff06;
+        }
+        #results-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <script>
+        function searchData(event) {
+            event.preventDefault();  // Ngăn form gửi yêu cầu thông thường
+            const formData = new FormData(document.getElementById("search-form"));
+            
+            fetch('/search2', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Xóa bảng kết quả cũ nếu có
+                    let table = document.getElementById("results-table");
+                    table.innerHTML = "";
+
+                    // Tạo tiêu đề bảng
+                    let headerRow = table.insertRow(0);
+                    let cell1 = headerRow.insertCell(0);
+                    let cell2 = headerRow.insertCell(1);
+                    let cell3 = headerRow.insertCell(2);
+                    cell1.innerHTML = "<b>ID</b>";
+                    cell2.innerHTML = "<b>Email</b>";
+                    cell3.innerHTML = "<b>Balance</b>";
+
+                    // Thêm dữ liệu vào bảng
+                    data.results.forEach((row, index) => {
+                        let newRow = table.insertRow(index + 1);
+                        newRow.insertCell(0).innerText = row[0];
+                        newRow.insertCell(1).innerText = row[1];
+                        newRow.insertCell(2).innerText = row[2];
+                    });
+                } else {
+                    // Hiển thị thông báo lỗi nếu không tìm thấy kết quả
+                    document.getElementById("results-table").innerHTML = `<tr><td colspan="3">${data.message}</td></tr>`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <h1>Search for User</h1>
+    <form id="search-form" method="POST" onsubmit="searchData(event)">
+        <label for="id">Enter ID:</label>
+        <input type="text" id="id" name="id" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Bảng hiển thị kết quả -->
+    <table id="results-table"></table>
+</body>
+</html>

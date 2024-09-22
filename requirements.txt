@@ -23,3 +23,10 @@ Flask-Mail
 Flask-OAuthlib
 Authlib
 paypalrestsdk
+gspread
+oauth2client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+dropbox

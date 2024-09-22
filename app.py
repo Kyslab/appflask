@@ -26,6 +26,14 @@ from authlib.integrations.base_client.errors import OAuthError
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 import paypalrestsdk
 from decimal import Decimal, ROUND_UP
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+import io
+import dropbox
+
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -136,6 +144,145 @@ def send_reset_email(user):
     link = url_for('reset_token', token=token, _external=True)
     msg.body = f'Please click the following link to reset your password: {link}'
     mail.send(msg)
+# Google Sheets API setup
+def get_sheet():
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name('ggsheetapi.json', scope)
+    client = gspread.authorize(creds)
+    # Open your Google Sheet
+    sheet = client.open('dulieu').sheet1  # sheet1 if you want to access the first sheet , không dùng được với file dulieu.xlsx
+    return sheet
+    # Mở bảng tính bằng ID hoặc URL
+    # spreadsheet = client.open_by_key('1h_3FW5usYneH8J8_tfFdPSXrvmNeo4rcfdSkvy8sIus')
+# Đường dẫn tới file credentials
+GOOGLE_CREDENTIALS_FILE = 'ggsheetapi.json'
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+
+# Tạo đối tượng credentials
+creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_FILE, scopes=SCOPES)
+
+def download_excel_file(file_id):
+    # Xây dựng đối tượng dịch vụ Drive
+    service = build('drive', 'v3', credentials=creds)
+    
+    # Lấy file từ Google Drive
+    request = service.files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    
+    done = False
+    while not done:
+        status, done = downloader.next_chunk()
+        print(f"Download {int(status.progress() * 100)}%")
+    
+    fh.seek(0)
+    return fh
+
+# Đọc dữ liệu từ file Excel
+def read_excel_data(file_stream):
+    workbook = openpyxl.load_workbook(file_stream)
+    sheet = workbook.active
+    
+    data = []
+    for row in sheet.iter_rows(values_only=True):
+        data.append(row)
+    print('data day :::')
+    print(data)
+    return data
+# Thay thế bằng Access Token của bạn
+DROPBOX_ACCESS_TOKEN = 'sl.B9TZafoPAqEWeeSNS9BJsz6qyAxqB15oGF4DOtIqgDiVn6M0n7Gj1PwLrK4veKPRPSP0tlPeaZwrAAWMX0hiXHz7Ny75QQyMDgC_VyO9FC69AtGzCpjIN5DV7HS5tUNZyS-DGZ373Sap'
+
+# Hàm để tải file từ Dropbox và đọc dữ liệu
+def download_excel_file_from_dropbox(file_path):
+    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+    
+    try:
+        # Tải file từ Dropbox về bộ nhớ tạm (in-memory)
+        metadata, res = dbx.files_download(file_path)
+        file_stream = io.BytesIO(res.content)
+        
+        # Đọc dữ liệu từ file Excel trong bộ nhớ
+        workbook = openpyxl.load_workbook(file_stream)
+        sheet = workbook.active
+        
+        data = []
+        for row in sheet.iter_rows(values_only=True):
+            data.append(row)
+        
+        return data
+    except dropbox.exceptions.ApiError as e:
+        print(f"Failed to download file: {e}")
+        return None
+
+@app.route('/searchdropbox', methods=['GET', 'POST'])
+def searchdropbox():
+    if request.method == 'POST':
+        search_id = request.form['id']
+        file_path = "/dulieuTracuuweb.xlsx"  # Đường dẫn đến file Excel trên Dropbox
+        
+        # Tải file từ Dropbox
+        data = download_excel_file_from_dropbox(file_path)
+        
+        if data:
+            # Tìm các dòng có ID khớp với ID tìm kiếm
+            results = [row for row in data if str(row[0]) == search_id]
+            
+            if not results:
+                flash(f'No results found for ID {search_id}', 'warning')
+            return render_template('resultsdropbox.html', results=results)
+        else:
+            flash('Failed to load data from Dropbox.', 'danger')
+    
+    return render_template('searchdropbox.html')
+@app.route('/search2', methods=['GET'])
+def search_page():
+    return render_template('search2.html')
+@app.route('/search2', methods=['POST']) # tải file excel trên drvie về và tra cứu ra nhiều KQ
+def search2():
+    
+    search_id = request.form['id']
+    # file_id = '1lao2NqrvD3to40wwxn3n-iznNyumwFKX'  # Thay thế bằng Google Drive file ID của bạn-đây là TK drive khác
+    file_id = '1-1G0AtX8Ejk0wwigPAUrsLKk8yf3SWWf'  # Thay thế bằng Google Drive file ID của bạn
+    file_stream = download_excel_file(file_id)
+    data = read_excel_data(file_stream)
+    
+    results = [row for row in data if str(row[0]) == search_id]
+    
+    if not results:
+        return jsonify({'status': 'error', 'message': 'No results found for ID {}'.format(search_id)})
+
+    return jsonify({'status': 'success', 'results': results}  )  
+        
+@app.route('/lookup', methods=['GET', 'POST']) #dùng để tra cứu google sheet cho 1 kết quả duy nhất
+def lookup():
+    sheet = get_sheet()
+    result = None
+    if request.method == 'POST':
+        search_id = request.form['id']
+        records = sheet.get_all_records()
+
+        # Find the row with the matching id
+        for row in records:
+            if str(row['id']) == search_id:
+                result = row
+                break
+
+    return render_template('lookup.html', result=result)
+@app.route('/search', methods=['GET'])# GET hiển thị ra trang tra cứu googlesheet nhiều kết quả
+def search_form():
+    return render_template('search.html')
+@app.route('/search', methods=['POST'])#thực hiện post tra cứu googlesheet nhiều kết quả
+def search():
+    data = request.json
+    search_id = data.get('id')
+
+    # Get all rows from the Google Sheet
+    worksheet=get_sheet()
+    rows = worksheet.get_all_records()
+    # Find all rows with the matching ID
+    matching_rows = [row for row in rows if str(row['id']) == str(search_id)]
+
+    return jsonify(matching_rows)
 @app.route('/deposit', methods=['GET', 'POST'])
 def deposit():
     if 'user_id' not in session:
