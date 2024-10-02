@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>BPMS||Home Page</title>
+    
+    <link href="https://fonts.googleapis.com/css?family=Work+Sans:100,200,300,400,500,600,700,800,900" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Pacifico" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,400i,700,700i,900,900i" rel="stylesheet">
+
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/open-iconic-bootstrap.min.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/animate.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/owl.carousel.min.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/owl.theme.default.min.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/magnific-popup.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/aos.css') }}">
+
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/ionicons.min.css') }}">
+
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/bootstrap-datepicker.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/jquery.timepicker.css') }}">
+
+    
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/flaticon.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/icomoon.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='phpcss/style.css') }}">
+
+    
+    
+    <!-- Add other CSS links here -->
+</head>
+<body>
+    <!-- Header Include -->
+    {% include 'header.html' %}
+    
+    <section id="home-section" class="hero" style="background-image: url('{{ url_for('static', filename='phpimages/bg.jpg') }}');" data-stellar-background-ratio="0.5">
+                          
+        <div class="home-slider owl-carousel">
+        <div class="slider-item js-fullheight">
+            <div class="overlay"></div>
+          <div class="container-fluid p-0">
+            <div class="row d-md-flex no-gutters slider-text align-items-end justify-content-end" data-scrollax-parent="true">
+                
+                <img class="one-third align-self-end order-md-last img-fluid" src="{{ url_for('static', filename='phpimages/bg_1.png') }}" alt="">
+
+                <div class="one-forth d-flex align-items-center ftco-animate" data-scrollax=" properties: { translateY: '70%' }">
+                    <div class="text mt-5">
+                        <span class="subheading">Beauty Parlour</span>
+                      <h1 class="mb-4">Get Pretty Look</h1>
+                      <p class="mb-4">We pride ourselves on our high quality work and attention to detail. The products we use are of top quality branded products.</p>
+                      
+                     
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+
+        <div class="slider-item js-fullheight">
+            <div class="overlay"></div>
+          <div class="container-fluid p-0">
+            <div class="row d-flex no-gutters slider-text align-items-center justify-content-end" data-scrollax-parent="true">
+                
+                <img class="one-third align-self-end order-md-last img-fluid" src="{{ url_for('static', filename='phpimages/bg_2.png') }}" alt="">
+                <div class="one-forth d-flex align-items-center ftco-animate" data-scrollax=" properties: { translateY: '70%' }">
+                    <div class="text mt-5">
+                        <span class="subheading">Natural Beauty</span>
+                      <h1 class="mb-4">Beauty Salon</h1>
+                      <p class="mb-4">This parlour provides huge facilities with advanced technology equipments and best quality service. Here we offer best treatment that you might have never experienced before.</p>
+                      
+                     
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+      </div>
+  </section>
+
+
+<br>
+    
+
+    <!-- Appointment Form Section -->
+    <section class="ftco-section ftco-no-pt ftco-booking">
+        <div class="container-fluid px-0">
+            <div class="row no-gutters d-md-flex justify-content-end">
+                <div class="one-forth d-flex align-items-end">
+                    <div class="text">
+                        <div class="overlay"></div>
+                        <div class="appointment-wrap">
+                            <span class="subheading">Reservation</span>
+                            <h3 class="mb-2">Make an Appointment</h3>
+                            <form action="/phpindex" method="POST" class="appointment-form">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="name" placeholder="Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <input type="email" class="form-control" name="email" placeholder="Email" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <select name="services" required class="form-control">
+                                                <option value="">Select Services</option>
+                                                {% for service in services %}
+                                                <option value="{{ service.ServiceName }}">{{ service.ServiceName }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control appointment_date" name="adate" placeholder="Date" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control appointment_time" name="atime" placeholder="Time" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="phone" placeholder="Phone" required maxlength="10" pattern="[0-9]+">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <input type="submit" value="Make an Appointment" class="btn btn-primary">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="one-third">
+                    <div class="img" style="background-image: url('{{ url_for('static', filename='phpimages/bg-1.jpg') }}');"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Chèn footer -->
+    {% include 'footer.html' %}
+
+    <!-- Footer Include -->
+    <script src="{{ url_for('static', filename='phpjs/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/jquery-migrate-3.0.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/jquery.easing.1.3.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/jquery.waypoints.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/jquery.stellar.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/owl.carousel.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/jquery.magnific-popup.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/aos.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/jquery.animateNumber.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/bootstrap-datepicker.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/jquery.timepicker.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/scrollax.min.js') }}"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVWaKrjvy3MaE7SQ74_uJiULgl1JY0H2s&sensor=false"></script>
+    <script src="{{ url_for('static', filename='phpjs/google-map.js') }}"></script>
+    <script src="{{ url_for('static', filename='phpjs/main.js') }}"></script>
+</body>
+
+
+</html>

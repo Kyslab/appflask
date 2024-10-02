@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lệnh Xuất Hàng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        fieldset {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        legend {
+            font-weight: bold;
+            padding: 0 10px;
+        }
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .form-row label {
+            width: 28%;
+            
+        }
+        .form-row input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            margin-right: 10px;        
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lệnh Xuất Hàng</h1>
+    <form action="#" method="post">
+
+        <!-- 1. Tên người ra lệnh -->
+        <fieldset>
+            <legend>1. Tên người ra lệnh</legend>
+            <div class="form-row">
+                <label for="ten-nguoi-ra-lenh">Tên NRL:</label>
+                <input type="text" id="ten-nguoi-ra-lenh" name="ten-nguoi-ra-lenh" placeholder="Tên người ra lệnh">
+
+                <label for="dien-thoai-nguoi-ra-lenh">Điện thoại:</label>
+                <input type="tel" id="dien-thoai-nguoi-ra-lenh" name="dien-thoai-nguoi-ra-lenh" placeholder="Điện thoại">
+            </div>
+
+            <label for="chu-hang">Tên chủ hàng:</label>
+            <input type="text" id="chu-hang" name="chu-hang" placeholder="Tên chủ hàng">
+
+            <label for="dien-thoai-chu-hang">Điện thoại chủ hàng:</label>
+            <input type="tel" id="dien-thoai-chu-hang" name="dien-thoai-chu-hang" placeholder="Điện thoại">
+        </fieldset>
+
+        <!-- 2. Yêu cầu xuất -->
+        <fieldset>
+            <legend>2. Yêu cầu xuất</legend>
+            <label for="lo">Lô:</label>
+            <input type="text" id="lo" name="lo" placeholder="Lô hàng">
+
+            <label for="tau-so">Tàu số:</label>
+            <input type="text" id="tau-so" name="tau-so" placeholder="Tàu số">
+
+            <label for="hoa-don">Hóa đơn:</label>
+            <select id="hoa-don" name="hoa-don">
+                <option value="av">AV</option>
+                <option value="hs">HS</option>
+                <option value="ko">KO</option>
+            </select>
+
+            <label for="khoi-luong">Khối lượng:</label>
+            <input type="number" id="khoi-luong" name="khoi-luong" placeholder="Khối lượng (m3)">
+
+            <label for="so-luong">Số lượng:</label>
+            <input type="number" id="so-luong" name="so-luong" placeholder="Số lượng cây/kiện">
+        </fieldset>
+
+        <!-- 3. Loại xe -->
+        <fieldset>
+            <legend>3. Loại xe</legend>
+            <input type="radio" id="dau-keo" name="loai-xe" value="dau-keo">
+            <label for="dau-keo">Đầu kéo</label>
+            <input type="radio" id="tu-hanh" name="loai-xe" value="tu-hanh">
+            <label for="tu-hanh">Tự hành</label>
+        </fieldset>
+
+        <!-- 4. Nơi đến -->
+        <fieldset>
+            <legend>4. Nơi đến (thông tin của Khách mua gỗ)</legend>
+            <label for="ten-khach">Họ và tên đầy đủ (Khách mua gỗ):</label>
+            <input type="text" id="ten-khach" name="ten-khach" placeholder="Họ và tên">
+
+            <label for="cmnd">Số CMND:</label>
+            <input type="text" id="cmnd" name="cmnd" placeholder="Số CMND">
+
+            <label for="dien-thoai-khach">Điện thoại (Khách mua gỗ):</label>
+            <input type="tel" id="dien-thoai-khach" name="dien-thoai-khach" placeholder="Điện thoại">
+
+            <label for="dia-chi">Địa chỉ:</label>
+            <textarea id="dia-chi" name="dia-chi" placeholder="Xã/phường, Quận/huyện, Tỉnh/thành phố"></textarea>
+
+            <label for="don-vi">Đơn vị:</label>
+            <input type="text" id="don-vi" name="don-vi" placeholder="Đơn vị">
+
+            <label for="ma-so-thue">Mã số thuế:</label>
+            <input type="text" id="ma-so-thue" name="ma-so-thue" placeholder="Mã số thuế">
+        </fieldset>
+
+        <!-- 5. Thanh toán cước -->
+        <fieldset>
+            <legend>5. Thanh toán cước</legend>
+            <label for="thanh-toan-cuoc">Thanh toán cước:</label>
+            <select id="thanh-toan-cuoc" name="thanh-toan-cuoc">
+                <option value="khach-hang-tra-ngay">Khách hàng trả ngay khi nhận hàng</option>
+                <option value="chu-hang-tra-cuoc">Chủ hàng sẽ trả cước</option>
+            </select>
+
+            <label for="khuyen-mai-van-tai">Khuyến mại vận tải (%):</label>
+            <input type="number" id="khuyen-mai-van-tai" name="khuyen-mai-van-tai" placeholder="Khuyến mại">
+
+            <label for="lien-he-phat-sinh">Liên hệ khi có phát sinh:</label>
+            <input type="text" id="lien-he-phat-sinh" name="lien-he-phat-sinh" placeholder="Họ tên liên hệ">
+            <input type="tel" id="dien-thoai-phat-sinh" name="dien-thoai-phat-sinh" placeholder="Điện thoại liên hệ">
+        </fieldset>
+
+        <label for="ngay-gio">Ngày giờ:</label>
+        <input type="datetime-local" id="ngay-gio" name="ngay-gio">
+
+        <button type="submit">Gửi Lệnh</button>
+    </form>
+</body>
+</html>

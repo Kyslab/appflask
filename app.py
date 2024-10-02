@@ -33,7 +33,8 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import io
 import dropbox
-
+import pymysql
+import random
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -160,7 +161,22 @@ SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
 # Tạo đối tượng credentials
 creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_FILE, scopes=SCOPES)
-
+def get_file_id_by_name(file_name):
+    # Xây dựng đối tượng dịch vụ Drive
+    service = build('drive', 'v3', credentials=creds)
+    
+    # Tìm kiếm file theo tên
+    query = f"name='{file_name}'"
+    results = service.files().list(q=query, spaces='drive', fields="files(id, name)").execute()
+    
+    items = results.get('files', [])
+    
+    if not items:
+        print(f"No file found with name {file_name}")
+        return None
+    else:
+        # Giả sử tên file là duy nhất, ta lấy ID của file đầu tiên tìm thấy
+        return items[0]['id']
 def download_excel_file(file_id):
     # Xây dựng đối tượng dịch vụ Drive
     service = build('drive', 'v3', credentials=creds)
@@ -213,6 +229,86 @@ def download_excel_file_from_dropbox(file_path):
     except dropbox.exceptions.ApiError as e:
         print(f"Failed to download file: {e}")
         return None
+def connect_db():
+    return pymysql.connect(
+        host="localhost",
+        user="root",
+        password="",
+        db="bpmsdb",
+        cursorclass=pymysql.cursors.DictCursor
+    )
+@app.route('/phpindex', methods=['GET', 'POST'])
+def phpindex():
+    connection = connect_db()
+
+    # Giả lập dữ liệu từ cơ sở dữ liệu
+    # aboutus_description = "Chúng tôi cung cấp các dịch vụ chăm sóc sắc đẹp tốt nhất."
+    # contact_address = "123 Đường ABC, Thành phố XYZ"
+    # contact_phone = "123456789"
+    # contact_email = "info@beautyparlour.com"
+
+    if request.method == 'POST':
+        print('da co post roii')
+        name = request.form['name']
+        email = request.form['email']
+        services = request.form['services']
+        adate = request.form['adate']
+        atime = request.form['atime']
+        phone = request.form['phone']
+        aptnumber = random.randint(100000000, 999999999)
+
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                INSERT INTO tblappointment (AptNumber, Name, Email, PhoneNumber, AptDate, AptTime, Services)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (aptnumber, name, email, phone, adate, atime, services))
+                connection.commit()
+
+                # Get appointment number
+                query = "SELECT AptNumber FROM tblappointment WHERE Email=%s AND PhoneNumber=%s"
+                cursor.execute(query, (email, phone))
+                result = cursor.fetchone()
+                session['aptno'] = result['AptNumber']
+                return redirect('/thank-you')
+            print("ok")
+
+        except Exception as e:
+            flash('Something went wrong. Please try again.')
+            print(e)
+
+    # Fetch services for the dropdown
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM tblservices")
+        services = cursor.fetchall()
+
+        # Truy vấn về 'aboutus'
+        cursor.execute("SELECT PageDescription FROM tblpage WHERE PageType='aboutus'")
+        aboutus_result = cursor.fetchone()
+        aboutus_description = aboutus_result['PageDescription'] if aboutus_result else ""
+
+        # Truy vấn về 'contactus'
+        cursor.execute("SELECT PageDescription, MobileNumber, Email FROM tblpage WHERE PageType='contactus'")
+        contact_result = cursor.fetchone()
+        if contact_result:
+            contact_address = contact_result['PageDescription']
+            contact_phone = contact_result['MobileNumber']
+            contact_email = contact_result['Email']
+        else:
+            contact_address = ""
+            contact_phone = ""
+            contact_email = ""
+
+    connection.close()
+    return render_template('phpindex.html', services=services, aboutus_description=aboutus_description,
+                           contact_address=contact_address,
+                           contact_phone=contact_phone,
+                           contact_email=contact_email)
+
+@app.route('/thank-you')
+def thank_you():
+    return "Thank you for your appointment."
 
 @app.route('/searchdropbox', methods=['GET', 'POST'])
 def searchdropbox():
@@ -242,7 +338,12 @@ def search2():
     
     search_id = request.form['id']
     # file_id = '1lao2NqrvD3to40wwxn3n-iznNyumwFKX'  # Thay thế bằng Google Drive file ID của bạn-đây là TK drive khác
-    file_id = '1-1G0AtX8Ejk0wwigPAUrsLKk8yf3SWWf'  # Thay thế bằng Google Drive file ID của bạn
+    # file_id = '1-1G0AtX8Ejk0wwigPAUrsLKk8yf3SWWf'  # Thay thế bằng Google Drive file ID của bạn
+    file_name = 'dulieu.xlsx'  # Thay thế bằng tên file bạn muốn tìm
+        
+        # Tìm file ID theo tên
+    file_id = get_file_id_by_name(file_name)
+    
     file_stream = download_excel_file(file_id)
     data = read_excel_data(file_stream)
     
